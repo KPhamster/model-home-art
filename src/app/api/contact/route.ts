@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization to avoid build-time errors
+const getResend = () => new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,6 +30,7 @@ export async function POST(request: NextRequest) {
 
     // Send notification email to admin
     if (process.env.RESEND_API_KEY && process.env.ADMIN_EMAIL) {
+      const resend = getResend();
       await resend.emails.send({
         from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
         to: process.env.ADMIN_EMAIL,
