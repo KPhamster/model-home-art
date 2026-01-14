@@ -1,0 +1,226 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== PRODUCTS & E-COMMERCE ====================
+
+model Collection {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  image       String?
+  order       Int       @default(0)
+  featured    Boolean   @default(false)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id           String      @id @default(cuid())
+  slug         String      @unique
+  name         String
+  description  String?
+  price        Int         // Price in cents
+  comparePrice Int?        // Original price for sale display
+  images       String[]    // Array of image URLs
+  sizes        String[]    // Available sizes
+  materials    String?
+  inStock      Boolean     @default(true)
+  inventory    Int         @default(0)
+  featured     Boolean     @default(false)
+  collection   Collection? @relation(fields: [collectionId], references: [id])
+  collectionId String?
+  orderItems   OrderItem[]
+  cartItems    CartItem[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  sessionId String     @unique
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  cartId    String
+  product   Product  @relation(fields: [productId], references: [id])
+  productId String
+  quantity  Int      @default(1)
+  size      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId, size])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  email           String
+  phone           String?
+  status          OrderStatus @default(PENDING)
+  subtotal        Int         // In cents
+  shipping        Int         // In cents
+  tax             Int         // In cents
+  total           Int         // In cents
+  shippingAddress Json
+  billingAddress  Json?
+  stripePaymentId String?
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+  name      String
+  price     Int     // Price at time of purchase
+  quantity  Int
+  size      String?
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+// ==================== QUOTE REQUESTS ====================
+
+model QuoteRequest {
+  id               String        @id @default(cuid())
+  // Step 1: Category & Description
+  category         String
+  description      String?
+  // Step 2: Size & Photos
+  width            String?
+  height           String?
+  notSureSize      Boolean       @default(false)
+  images           String[]      // Uploaded image URLs
+  repairsNeeded    Boolean       @default(false)
+  repairNotes      String?
+  // Step 3: Style & Budget
+  stylePreference  String?
+  matting          String?
+  protection       String?
+  budgetRange      String?
+  // Step 4: Timeline & Service
+  timeline         String?
+  services         String[]      // Pickup, Delivery, Shipping, Installation
+  zipCode          String?
+  // Step 5: Contact Info
+  name             String
+  email            String
+  phone            String?
+  preferredContact String?
+  // Admin fields
+  status           QuoteStatus   @default(NEW)
+  notes            String?       // Internal notes
+  quotedPrice      Int?          // Price quoted in cents
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+enum QuoteStatus {
+  NEW
+  IN_PROGRESS
+  QUOTED
+  ACCEPTED
+  CLOSED
+}
+
+// ==================== GALLERY ====================
+
+model GalleryItem {
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  category       String
+  images         String[]
+  beforeImage    String?  // For before/after comparisons
+  afterImage     String?
+  featured       Boolean  @default(false)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// ==================== REVIEWS ====================
+
+model Review {
+  id         String   @id @default(cuid())
+  name       String
+  rating     Int      // 1-5
+  text       String
+  source     String?  // "google", "yelp", "manual"
+  externalId String?  // External review ID for sync
+  featured   Boolean  @default(false)
+  approved   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ==================== CONTACT SUBMISSIONS ====================
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// ==================== BUSINESS INQUIRIES ====================
+
+model BusinessInquiry {
+  id                 String   @id @default(cuid())
+  businessName       String
+  contactName        String
+  email              String
+  phone              String?
+  projectDescription String?
+  sizesInfo          String?
+  images             String[]
+  timeline           String?
+  deliveryNeeds      String?
+  status             String   @default("NEW")
+  notes              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+// ==================== ADMIN USERS ====================
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

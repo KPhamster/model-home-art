@@ -1,26 +1,209 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Color palette - Neutral with Teal accent */
+  --color-background: #FAFAF9;
+  --color-foreground: #1C1917;
+  
+  --color-card: #FFFFFF;
+  --color-card-foreground: #1C1917;
+  
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #1C1917;
+  
+  --color-primary: #0D9488;
+  --color-primary-foreground: #FFFFFF;
+  
+  --color-secondary: #F5F5F4;
+  --color-secondary-foreground: #1C1917;
+  
+  --color-muted: #F5F5F4;
+  --color-muted-foreground: #78716C;
+  
+  --color-accent: #F5F5F4;
+  --color-accent-foreground: #1C1917;
+  
+  --color-destructive: #EF4444;
+  --color-destructive-foreground: #FFFFFF;
+  
+  --color-border: #E7E5E4;
+  --color-input: #E7E5E4;
+  --color-ring: #0D9488;
+  
+  /* Chart colors */
+  --color-chart-1: #0D9488;
+  --color-chart-2: #14B8A6;
+  --color-chart-3: #2DD4BF;
+  --color-chart-4: #5EEAD4;
+  --color-chart-5: #99F6E4;
+  
+  --radius: 0.625rem;
+  
+  /* Sidebar colors */
+  --color-sidebar: #FAFAF9;
+  --color-sidebar-foreground: #1C1917;
+  --color-sidebar-primary: #0D9488;
+  --color-sidebar-primary-foreground: #FFFFFF;
+  --color-sidebar-accent: #F5F5F4;
+  --color-sidebar-accent-foreground: #1C1917;
+  --color-sidebar-border: #E7E5E4;
+  --color-sidebar-ring: #0D9488;
+
+  /* Font families */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Playfair Display", ui-serif, Georgia, serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Base styles */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* Typography */
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+/* Selection color */
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-foreground);
+}
+
+/* Smooth image loading */
+img {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+img[data-loading="true"] {
+  opacity: 0;
+}
+
+/* Container utility */
+.container-wide {
+  width: 100%;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-wide {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-wide {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Prose improvements */
+.prose-custom {
+  line-height: 1.75;
+}
+
+.prose-custom p {
+  margin-bottom: 1.25em;
+}
+
+.prose-custom h2 {
+  margin-top: 2em;
+  margin-bottom: 1em;
+}
+
+.prose-custom h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+}
+
+.prose-custom ul, .prose-custom ol {
+  margin-bottom: 1.25em;
+  padding-left: 1.5em;
+}
+
+.prose-custom li {
+  margin-bottom: 0.5em;
+}
+
+/* Animation utilities */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out forwards;
+}
+
+/* Staggered animation delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
