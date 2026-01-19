@@ -8,7 +8,7 @@ const footerLinks = {
     { href: "/shop", label: "Shop Frames" },
     { href: "/what-we-frame", label: "What We Frame" },
     { href: "/business", label: "Business Services" },
-    { href: "/gallery", label: "Gallery" },
+    // { href: "/gallery", label: "Gallery" },
   ],
   company: [
     { href: "/about", label: "About Us" },

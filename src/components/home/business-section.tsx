@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import businessImage from "../../../assets/business_image.png";
 
 const benefits = [
   "Volume pricing for bulk orders",
@@ -41,20 +42,15 @@ export function BusinessSection() {
             </Button>
           </div>
 
-          {/* Image Placeholder */}
+          {/* Image */}
           <div className="relative">
             <div className="aspect-[4/3] rounded-2xl bg-stone-200 border border-border overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                <div className="text-center p-8">
-                  <div className="w-20 h-20 mx-auto mb-4 bg-stone-300 rounded-lg flex items-center justify-center">
-                    <svg className="w-10 h-10 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <p className="font-medium">[BUSINESS INSTALLATION IMAGE]</p>
-                  <p className="text-sm mt-1">Office or hotel installation</p>
-                </div>
-              </div>
+              <img
+                src={businessImage.src}
+                alt="Business installation with framed artwork"
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
             </div>
           </div>
         </div>

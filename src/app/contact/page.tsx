@@ -56,7 +56,7 @@ export default function ContactPage() {
         <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Contact Info */}
-            <div>
+            <div className="flex flex-col h-full">
               <h2 className="text-2xl font-heading font-semibold mb-6">
                 Visit Our Shop
               </h2>
@@ -113,15 +113,18 @@ export default function ContactPage() {
                 </a>
               </Button>
 
-              {/* Map Placeholder */}
-              <div className="aspect-video rounded-lg bg-stone-200 border border-border overflow-hidden mb-8">
-                <div className="h-full flex items-center justify-center text-muted-foreground">
-                  <div className="text-center p-4">
-                    <MapPin className="w-12 h-12 mx-auto mb-2 text-stone-400" />
-                    <p className="font-medium">[GOOGLE MAP EMBED]</p>
-                    <p className="text-sm">Store location</p>
-                  </div>
-                </div>
+              {/* Map Embed */}
+              <div className="aspect-square md:aspect-auto md:flex-1 min-h-[250px] rounded-lg border border-border overflow-hidden mb-8">
+                <iframe
+                  src={businessConfig.googleMapsEmbedUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, minHeight: "250px" }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Model Home Art Location"
+                />
               </div>
 
               {/* What to Bring */}

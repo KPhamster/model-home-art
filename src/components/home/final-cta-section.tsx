@@ -1,10 +1,20 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import callToActionImage from "../../../assets/calltoaction_image.jpg";
 
 export function FinalCTASection() {
   return (
-    <section className="py-16 lg:py-24 bg-primary text-white">
-      <div className="container-wide text-center">
+    <section className="relative py-16 lg:py-24 text-white overflow-hidden">
+      <div className="absolute inset-0">
+        <img
+          src={callToActionImage.src}
+          alt="Custom framed art in a warm home setting"
+          className="h-full w-full object-cover"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-black/50" />
+      </div>
+      <div className="relative container-wide text-center">
         <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-semibold mb-6">
           Ready to get your piece framed?
         </h2>
@@ -17,15 +27,15 @@ export function FinalCTASection() {
             asChild
             size="lg"
             variant="secondary"
-            className="text-base bg-white text-primary hover:bg-white/90"
+            className="text-base bg-primary text-white hover:bg-white hover:text-primary"
           >
             <Link href="/quote">Get a Fast Quote</Link>
           </Button>
           <Button
             asChild
             size="lg"
-            variant="outline"
-            className="text-base border-white text-white hover:bg-white/10"
+            variant="secondary"
+            className="text-base bg-white text-primary hover:bg-primary hover:text-white"
           >
             <Link href="/contact">Visit Our Shop</Link>
           </Button>

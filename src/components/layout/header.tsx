@@ -14,7 +14,7 @@ const navItems = [
   { href: "/shop", label: "Shop Frames" },
   { href: "/what-we-frame", label: "What We Frame" },
   { href: "/business", label: "Business" },
-  { href: "/gallery", label: "Gallery" },
+  // { href: "/gallery", label: "Gallery" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];

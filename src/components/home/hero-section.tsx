@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Shield, Truck } from "lucide-react";
+import heroImage from "../../../assets/home_top_image.jpg";
 
 const trustChips = [
   { icon: CheckCircle, label: "Budget-friendly options" },
@@ -63,27 +64,17 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Hero Image Placeholder */}
+          {/* Hero Image */}
           <div className="relative">
             <div className="aspect-[4/3] rounded-2xl bg-stone-200 border border-border overflow-hidden shadow-2xl">
-              {/* Placeholder for hero lifestyle image */}
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                <div className="text-center p-8">
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-stone-300 flex items-center justify-center">
-                    <svg className="w-12 h-12 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <p className="font-medium">[HERO LIFESTYLE IMAGE]</p>
-                  <p className="text-sm mt-1">Beautiful framed pieces in a home setting</p>
-                </div>
-              </div>
+              <img
+                src={heroImage.src}
+                alt="Framed art in a warm, lived-in home setting"
+                className="h-full w-full object-cover"
+                loading="eager"
+              />
             </div>
             
-            {/* Floating accent element */}
-            <div className="absolute -bottom-4 -left-4 bg-primary text-white px-4 py-2 rounded-lg shadow-lg">
-              <p className="text-sm font-medium">Orange County's favorite framing shop</p>
-            </div>
           </div>
         </div>
       </div>

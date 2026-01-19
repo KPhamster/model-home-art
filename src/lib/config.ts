@@ -6,21 +6,20 @@ export const businessConfig = {
   
   // Contact Information
   address: {
-    street: "[STREET ADDRESS]",
-    city: "Orange County",
+    street: "2550 S. Fairview St.",
+    city: "Santa Ana",
     state: "CA",
-    zip: "[ZIP CODE]",
-    full: "[STREET ADDRESS], Orange County, CA [ZIP CODE]",
+    zip: "92704",
+    full: "2550 S. Fairview St., Santa Ana, CA 92704",
   },
-  phone: "[PHONE NUMBER]",
-  email: "hello@modelhomeart.com",
+  phone: "(714) 878-2919",
+  email: "modelhomeart@gmail.com",
   
   // Hours
   hours: {
-    display: "Mon-Fri: 10am-6pm, Sat: 10am-4pm, Sun: Closed",
+    display: "Mon-Sat: 10am-5pm, Sun: Closed",
     structured: [
-      { days: "Monday - Friday", hours: "10:00 AM - 6:00 PM" },
-      { days: "Saturday", hours: "10:00 AM - 4:00 PM" },
+      { days: "Monday - Saturday", hours: "10:00 AM - 5:00 PM" },
       { days: "Sunday", hours: "Closed" },
     ],
   },
@@ -32,8 +31,8 @@ export const businessConfig = {
   responseTime: "24 business hours",
   
   // Google Maps
-  googleMapsUrl: "https://maps.google.com/?q=[YOUR_ADDRESS]",
-  googleMapsEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!...",
+  googleMapsUrl: "https://www.google.com/maps/search/Model+Home+Art,+2550+S+Fairview+St,+Santa+Ana,+CA+92704",
+  googleMapsEmbedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3316.8765309843547!2d-117.91041092346794!3d33.713059973374116!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80dcd8bbe8e1473f%3A0xb691ed8e254c5162!2sModel%20Home%20Art!5e0!3m2!1sen!2sus!4v1737000000000!5m2!1sen!2sus",
   
   // Social Links
   social: {
@@ -76,7 +75,6 @@ export const framingCategories = [
 // Extended list for What We Frame page
 export const extendedFramingCategories = [
   ...framingCategories.slice(0, -1),
-  { id: "tickets", name: "Concert & Sports Tickets", icon: "ticket" },
   { id: "medals", name: "Medals & Awards", icon: "medal" },
   { id: "vinyl", name: "Vinyl Records & Album Art", icon: "disc" },
   { id: "baby", name: "Baby Keepsakes", icon: "baby" },
