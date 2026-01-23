@@ -33,9 +33,9 @@ export function Header() {
             <Image
               src="/logo_mha.png"
               alt="Model Home Art"
-              width={400}
+              width={500}
               height={70}
-              className="h-14 w-auto"
+              className="h-16 w-auto"
               priority
             />
           </Link>

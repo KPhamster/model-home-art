@@ -64,12 +64,42 @@ export default function BusinessPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    toast.success("Request submitted! We'll be in touch within 24 business hours.");
-    setIsSubmitting(false);
-    (e.target as HTMLFormElement).reset();
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      businessName: formData.get('businessName'),
+      contactName: formData.get('contactName'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      projectDescription: formData.get('projectDescription'),
+      sizesInfo: formData.get('sizesInfo'),
+      timeline: formData.get('timeline'),
+      deliveryNeeds: formData.get('deliveryNeeds'),
+      invoicing: formData.get('invoicing') === 'on',
+    };
+
+    try {
+      const response = await fetch('/api/business-inquiry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit inquiry');
+      }
+
+      toast.success("Request submitted! We'll be in touch within 24 business hours.");
+      (e.target as HTMLFormElement).reset();
+    } catch (error) {
+      console.error('Business inquiry error:', error);
+      toast.error(error instanceof Error ? error.message : "Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
