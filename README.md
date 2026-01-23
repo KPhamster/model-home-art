@@ -67,8 +67,8 @@ A production-ready website for a custom framing business in Orange County, CA. B
    
    # Resend (Email)
    RESEND_API_KEY="re_..."
-   EMAIL_FROM="Model Home Art <hello@modelhomeart.com>"
-   ADMIN_EMAIL="admin@modelhomeart.com"
+   EMAIL_FROM="Model Home Art <noreply@yourdomain.com>"
+   ADMIN_EMAIL="your-email@example.com"
    
    # UploadThing
    UPLOADTHING_SECRET="sk_..."
