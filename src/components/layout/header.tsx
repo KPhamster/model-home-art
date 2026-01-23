@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu } from "lucide-react";
@@ -29,9 +30,14 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <span className="font-heading text-xl font-semibold text-foreground">
-              Model Home Art
-            </span>
+            <Image
+              src="/logo_mha.png"
+              alt="Model Home Art"
+              width={400}
+              height={70}
+              className="h-14 w-auto"
+              priority
+            />
           </Link>
 
           {/* Desktop Navigation */}
@@ -71,10 +77,16 @@ export function Header() {
                 <div className="flex flex-col gap-6 mt-6">
                   <Link
                     href="/"
-                    className="font-heading text-xl font-semibold"
+                    className="flex items-center"
                     onClick={() => setMobileOpen(false)}
                   >
-                    Model Home Art
+                    <Image
+                      src="/logo_mha.png"
+                      alt="Model Home Art"
+                      width={180}
+                      height={45}
+                      className="h-9 w-auto"
+                    />
                   </Link>
                   <nav className="flex flex-col gap-1">
                     {navItems.map((item) => (

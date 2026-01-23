@@ -166,25 +166,49 @@ export default function QuotePage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
+  // Convert File to base64 string
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleSubmit = async () => {
     if (!validateStep()) return;
 
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Convert images to base64 for submission
+      const imageBase64s = await Promise.all(
+        formData.images.map((file) => fileToBase64(file))
+      );
 
-      // In production, this would upload images and save to database
-      // const response = await fetch('/api/quote', {
-      //   method: 'POST',
-      //   body: JSON.stringify(formData),
-      // });
+      const response = await fetch('/api/quote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          images: imageBase64s,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit quote request');
+      }
 
       setIsComplete(true);
       toast.success("Quote request submitted!");
     } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+      console.error('Quote submission error:', error);
+      toast.error(error instanceof Error ? error.message : "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
