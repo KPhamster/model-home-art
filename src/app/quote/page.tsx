@@ -228,52 +228,8 @@ export default function QuotePage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  // Compress image using canvas to reduce file size
-  const compressImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
-      
-      img.onload = () => {
-        // Calculate new dimensions while maintaining aspect ratio
-        let { width, height } = img;
-        
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
-        }
-        if (height > maxHeight) {
-          width = (width * maxHeight) / height;
-          height = maxHeight;
-        }
-        
-        canvas.width = width;
-        canvas.height = height;
-        
-        // Draw and compress
-        ctx?.drawImage(img, 0, 0, width, height);
-        
-        // Convert to base64 with compression
-        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-        resolve(compressedBase64);
-      };
-      
-      img.onerror = () => reject(new Error('Failed to load image'));
-      
-      // Create object URL for the file
-      img.src = URL.createObjectURL(file);
-    });
-  };
-
-  // Convert File to compressed base64 string
-  const fileToBase64 = async (file: File): Promise<string> => {
-    // If file is larger than 500KB, compress it
-    if (file.size > 500 * 1024) {
-      return compressImage(file);
-    }
-    
-    // For smaller files, just convert directly
+  // Convert File to base64 string (preserves original quality)
+  const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -528,7 +484,7 @@ export default function QuotePage() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Upload 1-3 photos of your item. Maximum total size: {MAX_UPLOAD_SIZE_MB} MB.
+                    Upload 1-3 photos of your item in original quality. Maximum total size: {MAX_UPLOAD_SIZE_MB} MB.
                   </p>
                 </div>
 
