@@ -53,8 +53,8 @@ export async function POST(request: NextRequest) {
           <p>We look forward to working with you!</p>
           <p>
             <strong>Model Home Art</strong><br>
-            [ADDRESS]<br>
-            [PHONE]
+            2550 S. Fairview St., Santa Ana, CA 92704<br>
+            (714) 878-2919
           </p>
         `,
       });

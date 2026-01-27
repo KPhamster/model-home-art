@@ -51,7 +51,7 @@ interface FormData {
   budgetRange: string;
   // Step 4
   timeline: string;
-  services: string[];
+  service: string;
   zipCode: string;
   // Step 5
   name: string;
@@ -79,7 +79,7 @@ export default function QuotePage() {
     protection: "",
     budgetRange: "",
     timeline: "",
-    services: [],
+    service: "",
     zipCode: "",
     name: "",
     email: "",
@@ -89,15 +89,6 @@ export default function QuotePage() {
 
   const updateField = <K extends keyof FormData>(field: K, value: FormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleServiceToggle = (service: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      services: prev.services.includes(service)
-        ? prev.services.filter((s) => s !== service)
-        : [...prev.services, service],
-    }));
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,13 +123,50 @@ export default function QuotePage() {
           toast.error("Please upload at least one photo");
           return false;
         }
+        // Size validation: must provide both dimensions OR check "not sure"
+        const hasWidth = formData.width.trim() !== "";
+        const hasHeight = formData.height.trim() !== "";
+        if (!formData.notSureSize) {
+          if (!hasWidth && !hasHeight) {
+            toast.error("Please enter dimensions or check 'Not sure — help me measure'");
+            return false;
+          }
+          if (hasWidth && !hasHeight) {
+            toast.error("Please enter the height");
+            return false;
+          }
+          if (!hasWidth && hasHeight) {
+            toast.error("Please enter the width");
+            return false;
+          }
+        }
         return true;
       case 3:
+        if (!formData.stylePreference) {
+          toast.error("Please select a frame style");
+          return false;
+        }
+        if (!formData.matting) {
+          toast.error("Please select a matting option");
+          return false;
+        }
+        if (!formData.protection) {
+          toast.error("Please select a glass/protection option");
+          return false;
+        }
         return true;
       case 4:
+        if (!formData.timeline) {
+          toast.error("Please select a timeline");
+          return false;
+        }
+        if (!formData.service) {
+          toast.error("Please select how you'd like to receive your item");
+          return false;
+        }
         if (
-          (formData.services.includes("delivery") ||
-            formData.services.includes("installation")) &&
+          (formData.service === "delivery" ||
+            formData.service === "installation") &&
           !formData.zipCode
         ) {
           toast.error("Please enter your zip code for delivery/installation");
@@ -148,6 +176,14 @@ export default function QuotePage() {
       case 5:
         if (!formData.name || !formData.email) {
           toast.error("Please fill in required fields");
+          return false;
+        }
+        if (!formData.phone) {
+          toast.error("Please enter your phone number");
+          return false;
+        }
+        if (!formData.preferredContact) {
+          toast.error("Please select a preferred contact method");
           return false;
         }
         return true;
@@ -194,6 +230,7 @@ export default function QuotePage() {
         },
         body: JSON.stringify({
           ...formData,
+          services: formData.service ? [formData.service] : [],
           images: imageBase64s,
         }),
       });
@@ -466,12 +503,12 @@ export default function QuotePage() {
                 <div>
                   <h2 className="text-xl font-semibold mb-1">Style & Budget</h2>
                   <p className="text-sm text-muted-foreground">
-                    Help us understand your preferences. Not sure? That's okay!
+                    Help us understand your preferences.
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Frame Style</Label>
+                  <Label>Frame Style *</Label>
                   <RadioGroup
                     value={formData.stylePreference}
                     onValueChange={(value) => updateField("stylePreference", value)}
@@ -494,7 +531,7 @@ export default function QuotePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Matting</Label>
+                  <Label>Matting *</Label>
                   <RadioGroup
                     value={formData.matting}
                     onValueChange={(value) => updateField("matting", value)}
@@ -517,7 +554,7 @@ export default function QuotePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Glass/Protection</Label>
+                  <Label>Glass/Protection *</Label>
                   <RadioGroup
                     value={formData.protection}
                     onValueChange={(value) => updateField("protection", value)}
@@ -571,7 +608,7 @@ export default function QuotePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Timeline</Label>
+                  <Label>Timeline *</Label>
                   <RadioGroup
                     value={formData.timeline}
                     onValueChange={(value) => updateField("timeline", value)}
@@ -594,30 +631,30 @@ export default function QuotePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>How should we get it to you?</Label>
-                  <div className="space-y-2">
+                  <Label>How should we get it to you? *</Label>
+                  <RadioGroup
+                    value={formData.service}
+                    onValueChange={(value) => updateField("service", value)}
+                    className="space-y-2"
+                  >
                     {quoteOptions.services.map((service) => (
                       <Label
                         key={service.value}
                         className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                          formData.services.includes(service.value)
+                          formData.service === service.value
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-primary/50"
                         }`}
                       >
-                        <Checkbox
-                          checked={formData.services.includes(service.value)}
-                          onCheckedChange={() => handleServiceToggle(service.value)}
-                          className="mr-3"
-                        />
+                        <RadioGroupItem value={service.value} className="mr-3" />
                         <span className="text-sm">{service.label}</span>
                       </Label>
                     ))}
-                  </div>
+                  </RadioGroup>
                 </div>
 
-                {(formData.services.includes("delivery") ||
-                  formData.services.includes("installation")) && (
+                {(formData.service === "delivery" ||
+                  formData.service === "installation") && (
                   <div className="space-y-2">
                     <Label htmlFor="zipCode">Zip Code *</Label>
                     <Input
@@ -667,18 +704,19 @@ export default function QuotePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">Phone *</Label>
                   <Input
                     id="phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => updateField("phone", e.target.value)}
                     placeholder="(555) 123-4567"
+                    required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Preferred Contact Method</Label>
+                  <Label>Preferred Contact Method *</Label>
                   <RadioGroup
                     value={formData.preferredContact}
                     onValueChange={(value) => updateField("preferredContact", value)}
