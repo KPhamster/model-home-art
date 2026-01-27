@@ -21,13 +21,38 @@ const capitalize = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
-// Helper to parse base64 image and create attachment
+// Helper interface for image attachments
 interface ImageAttachment {
   filename: string;
   content: Buffer;
   contentType: string;
 }
 
+// Parse File objects from FormData into attachments
+const parseFileAttachments = async (files: File[]): Promise<ImageAttachment[]> => {
+  const attachments: ImageAttachment[] = [];
+  
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    // Get file extension from name or mime type
+    const extension = file.name.split('.').pop() || 
+      (file.type.includes('jpeg') ? 'jpg' : file.type.split('/')[1]) || 
+      'jpg';
+    
+    attachments.push({
+      filename: `photo-${i + 1}.${extension}`,
+      content: buffer,
+      contentType: file.type || 'image/jpeg',
+    });
+  }
+  
+  return attachments;
+};
+
+// Legacy: Parse base64 images (for backwards compatibility)
 const parseBase64Images = (images: string[]): ImageAttachment[] => {
   return images.map((base64String, index) => {
     // Parse data URL format: data:image/jpeg;base64,/9j/4AAQ...
@@ -438,9 +463,35 @@ const generateAdminEmailHtml = (body: any, quoteId: string, imageCount: number):
 
 export async function POST(request: NextRequest) {
   let body: any;
+  let imageFiles: File[] = [];
+  
+  // Check content type to determine how to parse
+  const contentType = request.headers.get('content-type') || '';
   
   try {
-    body = await request.json();
+    if (contentType.includes('multipart/form-data')) {
+      // Parse as FormData (binary file upload - more efficient)
+      const formData = await request.formData();
+      
+      // Get form fields from JSON string
+      const formDataJson = formData.get('formData');
+      if (formDataJson && typeof formDataJson === 'string') {
+        body = JSON.parse(formDataJson);
+      } else {
+        throw new Error('Missing formData field');
+      }
+      
+      // Collect image files
+      for (let i = 0; i < 3; i++) {
+        const file = formData.get(`image${i}`);
+        if (file && file instanceof File) {
+          imageFiles.push(file);
+        }
+      }
+    } else {
+      // Parse as JSON (legacy base64 method)
+      body = await request.json();
+    }
   } catch (parseError) {
     console.error("Failed to parse request body:", parseError);
     return NextResponse.json(
@@ -460,10 +511,10 @@ export async function POST(request: NextRequest) {
   let quote;
   
   // Save to database
-  // Note: We don't store full base64 images in the database (too large)
+  // Note: We don't store full images in the database (too large)
   // Images are sent via email attachments instead
   // Store a placeholder to indicate how many images were uploaded
-  const imageCount = body.images?.length || 0;
+  const imageCount = imageFiles.length || body.images?.length || 0;
   const imagePlaceholders = Array.from(
     { length: imageCount }, 
     (_, i) => `[image-${i + 1}-attached-to-email]`
@@ -477,7 +528,7 @@ export async function POST(request: NextRequest) {
         width: body.width || null,
         height: body.height || null,
         notSureSize: body.notSureSize || false,
-        images: imagePlaceholders, // Store placeholders, not full base64 data
+        images: imagePlaceholders, // Store placeholders, not full image data
         repairsNeeded: body.repairsNeeded || false,
         repairNotes: body.repairNotes || null,
         stylePreference: body.stylePreference || null,
@@ -517,9 +568,13 @@ export async function POST(request: NextRequest) {
       // Parse images for attachments
       let imageAttachments: ImageAttachment[] = [];
       try {
-        imageAttachments = body.images?.length 
-          ? parseBase64Images(body.images)
-          : [];
+        if (imageFiles.length > 0) {
+          // New method: File objects from FormData
+          imageAttachments = await parseFileAttachments(imageFiles);
+        } else if (body.images?.length) {
+          // Legacy method: base64 strings
+          imageAttachments = parseBase64Images(body.images);
+        }
       } catch (imageError) {
         console.error("Error parsing images for email:", imageError);
         // Continue without attachments

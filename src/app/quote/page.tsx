@@ -33,8 +33,8 @@ const steps = [
   { id: 5, name: "Contact", icon: User },
 ];
 
-// Maximum total upload size: 35MB
-const MAX_UPLOAD_SIZE_MB = 35;
+// Maximum total upload size: 4MB (Vercel serverless function limit is 4.5MB)
+const MAX_UPLOAD_SIZE_MB = 4;
 const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 
 // Helper to format file size
@@ -228,37 +228,47 @@ export default function QuotePage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  // Convert File to base64 string (preserves original quality)
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
   const handleSubmit = async () => {
     if (!validateStep()) return;
 
     setIsSubmitting(true);
 
     try {
-      // Convert images to base64 for submission
-      const imageBase64s = await Promise.all(
-        formData.images.map((file) => fileToBase64(file))
-      );
+      // Use FormData to send files as binary (avoids 33% base64 overhead)
+      const submitFormData = new FormData();
+      
+      // Add all form fields as JSON
+      const formFields = {
+        category: formData.category,
+        description: formData.description,
+        width: formData.width,
+        height: formData.height,
+        notSureSize: formData.notSureSize,
+        repairsNeeded: formData.repairsNeeded,
+        repairNotes: formData.repairNotes,
+        stylePreference: formData.stylePreference,
+        matting: formData.matting,
+        protection: formData.protection,
+        budgetRange: formData.budgetRange,
+        timeline: formData.timeline,
+        service: formData.service,
+        services: formData.service ? [formData.service] : [],
+        zipCode: formData.zipCode,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        preferredContact: formData.preferredContact,
+      };
+      submitFormData.append('formData', JSON.stringify(formFields));
+      
+      // Add images as binary files
+      formData.images.forEach((file, index) => {
+        submitFormData.append(`image${index}`, file);
+      });
 
       const response = await fetch('/api/quote', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          services: formData.service ? [formData.service] : [],
-          images: imageBase64s,
-        }),
+        body: submitFormData,
       });
 
       // Handle payload too large error
