@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Increase body size limit for API routes (for image uploads)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '35mb',
+    },
+  },
 };
 
 export default nextConfig;

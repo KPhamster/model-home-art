@@ -33,6 +33,22 @@ const steps = [
   { id: 5, name: "Contact", icon: User },
 ];
 
+// Maximum total upload size: 35MB
+const MAX_UPLOAD_SIZE_MB = 35;
+const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+
+// Helper to format file size
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return "0 MB";
+  const mb = bytes / (1024 * 1024);
+  return mb < 0.1 ? `${(bytes / 1024).toFixed(1)} KB` : `${mb.toFixed(1)} MB`;
+};
+
+// Helper to calculate total size of files
+const getTotalFileSize = (files: File[]): number => {
+  return files.reduce((total, file) => total + file.size, 0);
+};
+
 interface FormData {
   // Step 1
   category: string;
@@ -97,9 +113,19 @@ export default function QuotePage() {
       toast.error("Maximum 3 images allowed");
       return;
     }
+    
+    // Check total size including new files
+    const newImages = [...formData.images, ...files].slice(0, 3);
+    const totalSize = getTotalFileSize(newImages);
+    
+    if (totalSize > MAX_UPLOAD_SIZE_BYTES) {
+      toast.error(`Total upload size exceeds ${MAX_UPLOAD_SIZE_MB}MB limit. Please use smaller images.`);
+      return;
+    }
+    
     setFormData((prev) => ({
       ...prev,
-      images: [...prev.images, ...files].slice(0, 3),
+      images: newImages,
     }));
   };
 
@@ -202,8 +228,52 @@ export default function QuotePage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  // Convert File to base64 string
-  const fileToBase64 = (file: File): Promise<string> => {
+  // Compress image using canvas to reduce file size
+  const compressImage = (file: File, maxWidth = 1200, maxHeight = 1200, quality = 0.8): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculate new dimensions while maintaining aspect ratio
+        let { width, height } = img;
+        
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Convert to base64 with compression
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedBase64);
+      };
+      
+      img.onerror = () => reject(new Error('Failed to load image'));
+      
+      // Create object URL for the file
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  // Convert File to compressed base64 string
+  const fileToBase64 = async (file: File): Promise<string> => {
+    // If file is larger than 500KB, compress it
+    if (file.size > 500 * 1024) {
+      return compressImage(file);
+    }
+    
+    // For smaller files, just convert directly
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -235,7 +305,18 @@ export default function QuotePage() {
         }),
       });
 
-      const data = await response.json();
+      // Handle payload too large error
+      if (response.status === 413) {
+        throw new Error(`Your photos exceed the ${MAX_UPLOAD_SIZE_MB}MB limit. Please use smaller images or fewer photos.`);
+      }
+
+      // Try to parse JSON response
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error('Server error. Please try again or contact us directly.');
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to submit quote request');
@@ -395,18 +476,32 @@ export default function QuotePage() {
                 </div>
 
                 <div className="space-y-4">
-                  <Label>Photos *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Photos *</Label>
+                    {formData.images.length > 0 && (
+                      <span className={`text-xs font-medium ${
+                        getTotalFileSize(formData.images) > MAX_UPLOAD_SIZE_BYTES * 0.9
+                          ? "text-amber-600"
+                          : "text-muted-foreground"
+                      }`}>
+                        {formatFileSize(getTotalFileSize(formData.images))} / {MAX_UPLOAD_SIZE_MB} MB
+                      </span>
+                    )}
+                  </div>
                   <div className="grid grid-cols-3 gap-4">
                     {formData.images.map((file, index) => (
                       <div
                         key={index}
-                        className="relative aspect-square bg-stone-100 rounded-lg overflow-hidden"
+                        className="relative aspect-square bg-stone-100 rounded-lg overflow-hidden group"
                       >
                         <img
                           src={URL.createObjectURL(file)}
                           alt={`Upload ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-2 py-1 text-center">
+                          {formatFileSize(file.size)}
+                        </div>
                         <button
                           type="button"
                           onClick={() => removeImage(index)}
@@ -430,7 +525,7 @@ export default function QuotePage() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Upload 1-3 photos of your item. Required for accurate quotes.
+                    Upload 1-3 photos of your item. Maximum total size: {MAX_UPLOAD_SIZE_MB} MB.
                   </p>
                 </div>
 

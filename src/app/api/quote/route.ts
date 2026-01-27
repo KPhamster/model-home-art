@@ -3,6 +3,9 @@ import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 import { quoteOptions, businessConfig } from "@/lib/config";
 
+// App Router config: Allow longer processing time for large uploads
+export const maxDuration = 60;
+
 // Lazy initialization to avoid build-time errors
 const getResend = () => new Resend(process.env.RESEND_API_KEY);
 
