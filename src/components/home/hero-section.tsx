@@ -14,7 +14,7 @@ export function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-stone-100 to-background">
       {/* Background pattern */}
-      <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-5" />
+      <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-5 pointer-events-none" />
       
       <div className="container-wide py-16 md:py-24 lg:py-32">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
