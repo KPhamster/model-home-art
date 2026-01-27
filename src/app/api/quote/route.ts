@@ -456,11 +456,6 @@ const generateAdminEmailHtml = (body: any, quoteId: string, imageCount: number, 
           </div>
           `}
         </div>
-
-        <!-- Action Button -->
-        <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e7e5e4;">
-          <a href="${process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_URL || "https://modelhomeart.com"}/admin/quotes/${quoteId}" style="display: inline-block; background-color: #292524; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 14px; font-weight: 600;">View Full Details in Admin →</a>
-        </div>
       </div>
     </div>
 
