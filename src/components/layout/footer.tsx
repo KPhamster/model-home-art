@@ -36,7 +36,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-sm text-stone-400 mb-6">
-              Budget-friendly custom framing in Orange County. We frame just about anything.
+              Budget-friendly custom framing in Orange County, CA that delivers nationwide in the United States. We frame just about anything.
             </p>
             <div className="space-y-3 text-sm">
               <div className="flex items-start gap-3">

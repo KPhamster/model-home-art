@@ -39,10 +39,10 @@ export default function ShippingPolicyPage() {
               and pricing specific to your order.
             </p>
             <p className="mt-4">
-              <strong>Local Pickup:</strong> Available at our Orange County location at no charge.
+              <strong>Local Pickup:</strong> Available at our Orange County, CA location at no charge.
             </p>
             <p className="mt-2">
-              <strong>Local Delivery:</strong> We offer delivery throughout Orange County. Delivery 
+              <strong>Local Delivery:</strong> We offer delivery throughout the United States. Delivery 
               fees are based on distance and will be included in your quote.
             </p>
             <p className="mt-2">

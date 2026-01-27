@@ -110,7 +110,7 @@ export default function BusinessPage() {
           <div className="max-w-3xl mx-auto text-center">
             <Badge className="mb-4">Business Services</Badge>
             <h1 className="text-4xl md:text-5xl font-heading font-semibold mb-6">
-              Framing for businesses in Orange County
+              Framing for businesses in the United States
             </h1>
             <p className="text-xl text-muted-foreground mb-8">
               From offices to hotels, we provide reliable, consistent, affordable framing solutions for businesses of all sizes. Volume pricing and net-30 terms available.
@@ -130,7 +130,7 @@ export default function BusinessPage() {
               Who We Help
             </h2>
             <p className="text-lg text-muted-foreground">
-              We work with businesses across Orange County and beyond.
+              We work with businesses across the United States.
             </p>
           </div>
 

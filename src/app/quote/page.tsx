@@ -628,7 +628,7 @@ export default function QuotePage() {
                       maxLength={5}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Required for delivery/installation quotes in Orange County.
+                      Required for delivery/installation quotes in the United States.
                     </p>
                   </div>
                 )}

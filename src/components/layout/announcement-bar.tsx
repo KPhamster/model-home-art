@@ -16,7 +16,7 @@ export function AnnouncementBar() {
           <span className="mx-2 hidden sm:inline">•</span>
           <span className="hidden sm:inline">Delivery / Shipping / Installation</span>
           <span className="mx-2 hidden md:inline">•</span>
-          <span className="hidden md:inline">Orange County</span>
+          <span className="hidden md:inline">United States</span>
         </p>
         <button
           onClick={() => setIsVisible(false)}

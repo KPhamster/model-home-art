@@ -9,7 +9,7 @@ import {
 
 export const metadata: Metadata = {
   title: "About Us",
-  description: `${businessConfig.name} is a local framing shop in Orange County, CA. We offer budget-friendly custom framing with expert guidance, delivery, and installation.`,
+  description: `${businessConfig.name} is a local framing shop in Orange County, CA that delivers nationwide. We offer budget-friendly custom framing with expert guidance, delivery, and installation.`,
 };
 
 const whyUsReasons = [
@@ -38,12 +38,12 @@ const whyUsReasons = [
 const serviceHighlights = [
   {
     title: "Local Shop",
-    description: "Visit us in Orange County for hands-on help and to see samples in person.",
+    description: "Visit us in Orange County, CA for hands-on help and to see samples in person.",
     icon: MapPin,
   },
   {
     title: "Delivery & Install",
-    description: "We deliver throughout Orange County and professionally hang your pieces.",
+    description: "We deliver nationwide and professionally hang your pieces.",
     icon: Truck,
   },
   {
@@ -65,7 +65,7 @@ export default function AboutPage() {
                 Framing your memories, beautifully and affordably.
               </h1>
               <p className="text-xl text-muted-foreground mb-6">
-                {businessConfig.name} is a local framing shop serving Orange County, CA. 
+                {businessConfig.name} is a local framing shop in Orange County, CA that delivers nationwide. 
                 We believe custom framing shouldn't cost a fortune, and we're here to prove it.
               </p>
               <p className="text-lg text-muted-foreground mb-8">
@@ -119,7 +119,7 @@ export default function AboutPage() {
                 or your fiftieth, we treat every project with the same care and attention.
               </p>
               <p>
-                Located in Orange County, CA, we serve customers throughout Southern California. 
+                Located in Orange County, CA, we serve customers nationwide. 
                 From our local shop, we offer custom framing, ready-made frames, canvas printing, 
                 repairs, and professional delivery and installation.
               </p>
@@ -186,12 +186,12 @@ export default function AboutPage() {
         <div className="container-wide">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-6">
-              Serving Orange County and Beyond
+              Serving Nationwide
             </h2>
             <p className="text-lg text-muted-foreground mb-6">
-              Our shop is located in Orange County, California. We serve customers throughout 
-              Southern California with local delivery and professional installation. We also 
-              ship ready-made frames and completed custom orders nationwide.
+              Our shop is located in Orange County, California. We serve customers 
+              nationwide with delivery and professional installation. We also 
+              ship framed art and completed custom orders nationwide.
             </p>
             <p className="text-muted-foreground">
               <strong>Shop Address:</strong> {businessConfig.address.full}<br />

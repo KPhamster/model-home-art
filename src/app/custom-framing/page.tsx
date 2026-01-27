@@ -37,7 +37,7 @@ import medalsImage from "../../../assets/medals_image.jpeg";
 
 export const metadata: Metadata = {
   title: "Custom Framing",
-  description: "Affordable custom framing in Orange County. We frame art, photos, jerseys, diplomas, mirrors & more. Budget-friendly options with expert guidance.",
+  description: "Affordable custom framing in Orange County, CA that delivers nationwide. We frame art, photos, jerseys, diplomas, mirrors & more. Budget-friendly options with expert guidance.",
 };
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -351,7 +351,7 @@ export default function CustomFramingPage() {
               Ready to get started?
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Get a fast quote online or visit our Orange County shop for a free consultation.
+              Get a fast quote online or visit our Orange County, CA shop for a free consultation.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg">

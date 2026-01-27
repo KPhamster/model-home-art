@@ -26,7 +26,7 @@ export function HeroSection() {
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
               We frame just about anything: art, photos, jerseys, diplomas, mirrors, and memorabilia. 
-              Visit our Orange County shop or get a fast quote online. We deliver, ship, and install.
+              Visit our Orange County, CA shop or get a fast quote online. We deliver, ship, and install nationwide in the United States.
             </p>
             
             {/* CTAs */}

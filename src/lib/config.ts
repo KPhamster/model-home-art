@@ -25,7 +25,7 @@ export const businessConfig = {
   },
   
   // Service Area
-  serviceArea: "Orange County, CA",
+  serviceArea: "Orange County, CA and nationwide in the United States",
   
   // Response Time
   responseTime: "24 business hours",
@@ -52,9 +52,9 @@ export const businessConfig = {
   
   // Meta/SEO
   seo: {
-    title: "Model Home Art | Custom Framing in Orange County, CA",
-    description: "Budget-friendly custom framing in Orange County. We frame art, photos, jerseys, diplomas, mirrors & more. Visit our shop or get a fast quote online. Delivery & installation available.",
-    keywords: "custom framing, picture framing, Orange County, CA, jersey framing, diploma framing, art framing, affordable framing",
+    title: "Model Home Art | Custom Framing in Orange County, CA and nationwide in the United States",
+    description: "Budget-friendly custom framing in Orange County, CA that delivers nationwide in the United States. We frame art, photos, jerseys, diplomas, mirrors & more. Visit our shop or get a fast quote online. Delivery & installation available.",
+    keywords: "custom framing, picture framing, Orange County, CA, jersey framing, diploma framing, art framing, affordable framing, nationwide, United States",
   },
 } as const;
 
@@ -232,7 +232,7 @@ export const faqItems = [
   },
   {
     question: "Can you deliver and install my framed pieces?",
-    answer: "Absolutely. We offer local delivery throughout Orange County and professional installation. We'll hang your pieces exactly where you want them. Shipping is also available for ready-made frames and completed orders.",
+    answer: "Absolutely. We offer delivery throughout the United States and professional installation. We'll hang your pieces exactly where you want them. Shipping is also available for ready-made frames and completed orders.",
   },
   {
     question: "Do you repair or re-frame existing pieces?",
