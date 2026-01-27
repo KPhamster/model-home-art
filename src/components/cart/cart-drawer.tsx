@@ -40,7 +40,7 @@ export function CartDrawer() {
               Browse our collection and add some frames!
             </p>
             <Button asChild onClick={closeCart}>
-              <Link href="/shop">Shop Frames</Link>
+              <Link href="/shop">Shop Framed Art</Link>
             </Button>
           </div>
         ) : (

@@ -5,7 +5,7 @@ import { MapPin, Phone, Mail, Clock, Instagram, Facebook } from "lucide-react";
 const footerLinks = {
   services: [
     { href: "/custom-framing", label: "Custom Framing" },
-    { href: "/shop", label: "Shop Frames" },
+    { href: "/shop", label: "Shop Framed Art" },
     { href: "/what-we-frame", label: "What We Frame" },
     { href: "/business", label: "Business Services" },
     // { href: "/gallery", label: "Gallery" },

@@ -12,7 +12,7 @@ import { CartButton } from "@/components/cart/cart-button";
 
 const navItems = [
   { href: "/custom-framing", label: "Custom Framing" },
-  { href: "/shop", label: "Shop Frames" },
+  { href: "/shop", label: "Shop Framed Art" },
   { href: "/what-we-frame", label: "What We Frame" },
   { href: "/business", label: "Business" },
   // { href: "/gallery", label: "Gallery" },

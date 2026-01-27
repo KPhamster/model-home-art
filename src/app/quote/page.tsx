@@ -243,7 +243,7 @@ export default function QuotePage() {
                   <Link href="/">Back to Home</Link>
                 </Button>
                 <Button asChild>
-                  <Link href="/shop">Shop Ready-Made Frames</Link>
+                  <Link href="/shop">Shop Framed Art</Link>
                 </Button>
               </div>
             </CardContent>

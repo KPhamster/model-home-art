@@ -30,10 +30,10 @@ export function ShopPreviewSection() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
           <div>
             <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-2">
-              Shop Ready-Made Frames
+              Shop Framed Art
             </h2>
             <p className="text-lg text-muted-foreground">
-              Quality frames in standard sizes — ready to ship.
+              Beautiful art in quality frames — ready to ship!
             </p>
           </div>
           <Button asChild variant="outline">

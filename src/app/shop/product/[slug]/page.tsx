@@ -217,10 +217,6 @@ export default function ProductPage({ params }: PageProps) {
                     <ul className="space-y-2 text-muted-foreground text-sm">
                       <li className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                        Free shipping on orders over $150
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
                         Ships within 3-5 business days
                       </li>
                       <li className="flex items-start gap-2">

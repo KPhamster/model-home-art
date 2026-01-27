@@ -35,7 +35,7 @@ export function HeroSection() {
                 <Link href="/quote">Get a Fast Quote</Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-base">
-                <Link href="/shop">Shop Ready-Made Frames</Link>
+                <Link href="/shop">Shop Framed Art</Link>
               </Button>
             </div>
             

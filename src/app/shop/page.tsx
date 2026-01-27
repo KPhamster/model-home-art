@@ -5,8 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "Shop Frames",
-  description: "Shop ready-made frames in popular sizes. Modern, classic, gallery sets, and shadow boxes. Free shipping on orders over $150.",
+  title: "Shop Framed Art",
+  description: "Shop framed art in popular sizes. Modern, classic, gallery sets, and shadow boxes. Free shipping on orders over $150.",
 };
 
 // Placeholder data
@@ -38,13 +38,12 @@ export default function ShopPage() {
         <div className="container-wide">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-heading font-semibold mb-4">
-              Shop Ready-Made Frames
+              Shop Framed Art
             </h1>
             <p className="text-xl text-muted-foreground mb-6">
-              Quality frames in popular sizes — ready to ship. Free shipping on orders over $150.
+              Beautiful art in quality frames — ready to ship!
             </p>
             <div className="flex flex-wrap justify-center gap-2">
-              <Badge variant="secondary" className="px-3 py-1">Free shipping over $150</Badge>
               <Badge variant="secondary" className="px-3 py-1">Easy returns</Badge>
               <Badge variant="secondary" className="px-3 py-1">Ships in 3-5 days</Badge>
             </div>

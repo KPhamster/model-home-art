@@ -97,7 +97,7 @@ export const services = [
   {
     id: "ready-made",
     name: "Ready-Made Frames",
-    description: "Quality frames in standard sizes, ready to ship",
+    description: "Beautiful art in quality frames — ready to ship!",
     icon: "package",
   },
   {
