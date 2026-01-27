@@ -26,9 +26,6 @@ export default function ShippingPolicyPage() {
                 <strong>Delivery Time:</strong> Standard delivery takes {businessConfig.shipping.deliveryDays} after shipping.
               </li>
               <li>
-                <strong>Free Shipping:</strong> Orders over ${(businessConfig.shipping.freeThreshold / 100).toFixed(0)} ship free within the continental US.
-              </li>
-              <li>
                 <strong>Standard Shipping:</strong> ${(businessConfig.shipping.standardRate / 100).toFixed(2)} flat rate for orders under ${(businessConfig.shipping.freeThreshold / 100).toFixed(0)}.
               </li>
             </ul>

@@ -18,12 +18,9 @@ export function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, subtotal } =
     useCartStore();
 
-  const shippingThreshold = businessConfig.shipping.freeThreshold;
   const currentSubtotal = subtotal();
-  const shippingCost =
-    currentSubtotal >= shippingThreshold ? 0 : businessConfig.shipping.standardRate;
+  const shippingCost = businessConfig.shipping.standardRate;
   const total = currentSubtotal + shippingCost;
-  const amountToFreeShipping = shippingThreshold - currentSubtotal;
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && closeCart()}>
@@ -45,23 +42,6 @@ export function CartDrawer() {
           </div>
         ) : (
           <>
-            {/* Free Shipping Progress */}
-            {amountToFreeShipping > 0 && (
-              <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mb-4">
-                <p className="text-sm text-center">
-                  Add <strong>${(amountToFreeShipping / 100).toFixed(2)}</strong> more for free shipping!
-                </p>
-                <div className="w-full h-2 bg-primary/20 rounded-full mt-2">
-                  <div
-                    className="h-full bg-primary rounded-full transition-all"
-                    style={{
-                      width: `${Math.min(100, (currentSubtotal / shippingThreshold) * 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-
             {/* Cart Items */}
             <div className="flex-1 overflow-y-auto space-y-4">
               {items.map((item) => (
@@ -116,13 +96,7 @@ export function CartDrawer() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Shipping</span>
-                <span>
-                  {shippingCost === 0 ? (
-                    <span className="text-primary">Free</span>
-                  ) : (
-                    `$${(shippingCost / 100).toFixed(2)}`
-                  )}
-                </span>
+                <span>${(shippingCost / 100).toFixed(2)}</span>
               </div>
               <Separator />
               <div className="flex justify-between font-semibold text-base">

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
   title: "Shop Framed Art",
-  description: "Shop framed art in popular sizes. Modern, classic, gallery sets, and shadow boxes. Free shipping on orders over $150.",
+  description: "Shop framed art in popular sizes. Modern, classic, gallery sets, and shadow boxes.",
 };
 
 // Placeholder data
