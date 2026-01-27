@@ -319,7 +319,10 @@ export default function QuotePage() {
       }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit quote request');
+        // Include error code if available for debugging
+        const errorMsg = data.error || 'Failed to submit quote request';
+        const errorCode = data.code ? ` (Code: ${data.code})` : '';
+        throw new Error(`${errorMsg}${errorCode}`);
       }
 
       setIsComplete(true);

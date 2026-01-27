@@ -494,10 +494,17 @@ export async function POST(request: NextRequest) {
         status: "NEW",
       },
     });
-  } catch (dbError) {
+  } catch (dbError: any) {
     console.error("Database error saving quote:", dbError);
+    // Return more details for debugging
+    const errorMessage = dbError?.message || "Unknown database error";
+    const errorCode = dbError?.code || "UNKNOWN";
     return NextResponse.json(
-      { error: "Failed to save quote request" },
+      { 
+        error: "Failed to save quote request",
+        details: process.env.NODE_ENV === "development" ? errorMessage : undefined,
+        code: errorCode,
+      },
       { status: 500 }
     );
   }
