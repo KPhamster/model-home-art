@@ -437,26 +437,47 @@ const generateAdminEmailHtml = (body: any, quoteId: string, imageCount: number):
 };
 
 export async function POST(request: NextRequest) {
+  let body: any;
+  
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch (parseError) {
+    console.error("Failed to parse request body:", parseError);
+    return NextResponse.json(
+      { error: "Invalid request body" },
+      { status: 400 }
+    );
+  }
 
-    // Validate required fields
-    if (!body.category || !body.name || !body.email) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
+  // Validate required fields
+  if (!body.category || !body.name || !body.email) {
+    return NextResponse.json(
+      { error: "Missing required fields" },
+      { status: 400 }
+    );
+  }
 
-    // Save to database
-    const quote = await prisma.quoteRequest.create({
+  let quote;
+  
+  // Save to database
+  // Note: We don't store full base64 images in the database (too large)
+  // Images are sent via email attachments instead
+  // Store a placeholder to indicate how many images were uploaded
+  const imageCount = body.images?.length || 0;
+  const imagePlaceholders = Array.from(
+    { length: imageCount }, 
+    (_, i) => `[image-${i + 1}-attached-to-email]`
+  );
+  
+  try {
+    quote = await prisma.quoteRequest.create({
       data: {
         category: body.category,
         description: body.description || "",
         width: body.width || null,
         height: body.height || null,
         notSureSize: body.notSureSize || false,
-        images: body.images || [],
+        images: imagePlaceholders, // Store placeholders, not full base64 data
         repairsNeeded: body.repairsNeeded || false,
         repairNotes: body.repairNotes || null,
         stylePreference: body.stylePreference || null,
@@ -473,45 +494,85 @@ export async function POST(request: NextRequest) {
         status: "NEW",
       },
     });
+  } catch (dbError) {
+    console.error("Database error saving quote:", dbError);
+    return NextResponse.json(
+      { error: "Failed to save quote request" },
+      { status: 500 }
+    );
+  }
 
-    // Send confirmation email to customer
+  // Send emails (non-blocking - don't fail the request if email fails)
+  try {
     if (process.env.RESEND_API_KEY) {
       const resend = getResend();
       
       // Parse images for attachments
-      const imageAttachments = body.images?.length 
-        ? parseBase64Images(body.images)
-        : [];
+      let imageAttachments: ImageAttachment[] = [];
+      try {
+        imageAttachments = body.images?.length 
+          ? parseBase64Images(body.images)
+          : [];
+      } catch (imageError) {
+        console.error("Error parsing images for email:", imageError);
+        // Continue without attachments
+      }
+      
+      // Calculate total attachment size - Resend has a ~40MB limit
+      const totalAttachmentSize = imageAttachments.reduce(
+        (sum, att) => sum + att.content.length, 
+        0
+      );
+      
+      // Only include attachments if under 25MB (leave room for email content)
+      const includeAttachments = totalAttachmentSize < 25 * 1024 * 1024;
       
       // Format attachments for Resend
-      const resendAttachments = imageAttachments.map((att) => ({
-        filename: att.filename,
-        content: att.content,
-        content_type: att.contentType,
-      }));
+      const resendAttachments = includeAttachments 
+        ? imageAttachments.map((att) => ({
+            filename: att.filename,
+            content: att.content,
+            content_type: att.contentType,
+          }))
+        : [];
 
       // Customer confirmation email
-      await resend.emails.send({
-        from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
-        to: body.email,
-        subject: `Thanks for your quote request, ${body.name}! — Model Home Art`,
-        html: generateCustomerEmailHtml(body, imageAttachments.length),
-        attachments: resendAttachments.length > 0 ? resendAttachments : undefined,
-      });
+      try {
+        await resend.emails.send({
+          from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
+          to: body.email,
+          subject: `Thanks for your quote request, ${body.name}! — Model Home Art`,
+          html: generateCustomerEmailHtml(body, imageAttachments.length),
+          attachments: resendAttachments.length > 0 ? resendAttachments : undefined,
+        });
+      } catch (customerEmailError) {
+        console.error("Error sending customer email:", customerEmailError);
+        // Continue - don't fail the request
+      }
 
       // Admin notification email
       if (process.env.ADMIN_EMAIL) {
-        await resend.emails.send({
-          from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
-          to: process.env.ADMIN_EMAIL,
-          subject: `🖼️ New Quote: ${capitalize(body.category)} from ${body.name} (${getLabel(quoteOptions.budget, body.budgetRange)})`,
-          html: generateAdminEmailHtml(body, quote.id, imageAttachments.length),
-          attachments: resendAttachments.length > 0 ? resendAttachments : undefined,
-        });
+        try {
+          await resend.emails.send({
+            from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
+            to: process.env.ADMIN_EMAIL,
+            subject: `🖼️ New Quote: ${capitalize(body.category)} from ${body.name} (${getLabel(quoteOptions.budget, body.budgetRange)})`,
+            html: generateAdminEmailHtml(body, quote.id, imageAttachments.length),
+            attachments: resendAttachments.length > 0 ? resendAttachments : undefined,
+          });
+        } catch (adminEmailError) {
+          console.error("Error sending admin email:", adminEmailError);
+          // Continue - don't fail the request
+        }
       }
     }
+  } catch (emailError) {
+    console.error("Email sending error:", emailError);
+    // Don't fail the request - quote was saved
+  }
 
-    // Send Slack notification if configured
+  // Send Slack notification if configured (non-blocking)
+  try {
     if (process.env.SLACK_WEBHOOK_URL) {
       await fetch(process.env.SLACK_WEBHOOK_URL, {
         method: "POST",
@@ -521,15 +582,12 @@ export async function POST(request: NextRequest) {
         }),
       });
     }
-
-    return NextResponse.json({ success: true, id: quote.id });
-  } catch (error) {
-    console.error("Quote submission error:", error);
-    return NextResponse.json(
-      { error: "Failed to submit quote request" },
-      { status: 500 }
-    );
+  } catch (slackError) {
+    console.error("Slack notification error:", slackError);
+    // Don't fail the request
   }
+
+  return NextResponse.json({ success: true, id: quote.id });
 }
 
 export async function GET(request: NextRequest) {
