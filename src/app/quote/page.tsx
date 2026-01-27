@@ -58,6 +58,7 @@ interface FormData {
   height: string;
   notSureSize: boolean;
   images: File[];
+  imageLink: string; // Alternative: link to Google Drive, OneDrive, etc.
   repairsNeeded: boolean;
   repairNotes: string;
   // Step 3
@@ -88,6 +89,7 @@ export default function QuotePage() {
     height: "",
     notSureSize: false,
     images: [],
+    imageLink: "",
     repairsNeeded: false,
     repairNotes: "",
     stylePreference: "",
@@ -145,8 +147,9 @@ export default function QuotePage() {
         }
         return true;
       case 2:
-        if (formData.images.length === 0) {
-          toast.error("Please upload at least one photo");
+        // Require either uploaded images OR a link to images
+        if (formData.images.length === 0 && !formData.imageLink.trim()) {
+          toast.error("Please upload photos or provide a link to your images");
           return false;
         }
         // Size validation: must provide both dimensions OR check "not sure"
@@ -244,6 +247,7 @@ export default function QuotePage() {
         width: formData.width,
         height: formData.height,
         notSureSize: formData.notSureSize,
+        imageLink: formData.imageLink,
         repairsNeeded: formData.repairsNeeded,
         repairNotes: formData.repairNotes,
         stylePreference: formData.stylePreference,
@@ -494,7 +498,33 @@ export default function QuotePage() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Upload 1-3 photos of your item in original quality. Maximum total size: {MAX_UPLOAD_SIZE_MB} MB.
+                    Upload 1-3 photos of your item. Maximum total size: {MAX_UPLOAD_SIZE_MB} MB.
+                  </p>
+                </div>
+
+                {/* OR divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white px-2 text-muted-foreground">Or</span>
+                  </div>
+                </div>
+
+                {/* Image Link Alternative */}
+                <div className="space-y-2">
+                  <Label htmlFor="imageLink">Link to Photos (for larger files)</Label>
+                  <Input
+                    id="imageLink"
+                    type="url"
+                    value={formData.imageLink}
+                    onChange={(e) => updateField("imageLink", e.target.value)}
+                    placeholder="https://drive.google.com/... or https://onedrive.com/..."
+                    disabled={formData.images.length > 0}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    For high-resolution photos or files larger than {MAX_UPLOAD_SIZE_MB} MB, paste a link from Google Drive, OneDrive, Dropbox, or iCloud. Make sure the link is set to "Anyone with the link can view."
                   </p>
                 </div>
 

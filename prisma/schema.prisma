@@ -118,6 +118,7 @@ model QuoteRequest {
   height           String?
   notSureSize      Boolean       @default(false)
   images           String[]      // Uploaded image URLs
+  imageLink        String?       // Link to images on Google Drive, OneDrive, etc.
   repairsNeeded    Boolean       @default(false)
   repairNotes      String?
   // Step 3: Style & Budget

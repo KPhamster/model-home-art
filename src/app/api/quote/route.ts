@@ -79,7 +79,7 @@ const parseBase64Images = (images: string[]): ImageAttachment[] => {
 };
 
 // Generate customer confirmation email HTML
-const generateCustomerEmailHtml = (body: any, imageCount: number): string => {
+const generateCustomerEmailHtml = (body: any, imageCount: number, imageLink?: string): string => {
   const sizeDisplay = body.notSureSize
     ? "Not sure — help me measure"
     : body.width && body.height
@@ -229,6 +229,15 @@ const generateCustomerEmailHtml = (body: any, imageCount: number): string => {
             <p style="color: #15803d; font-size: 13px; margin: 0;">Check your email attachments to view your uploaded photos.</p>
           </div>
         </div>
+        ` : imageLink ? `
+        <!-- Image Link -->
+        <div style="margin-bottom: 24px;">
+          <h4 style="color: #292524; font-size: 14px; font-weight: 600; margin: 0 0 12px 0;">📸 Your Photos</h4>
+          <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px;">
+            <p style="color: #1e40af; font-size: 14px; font-weight: 500; margin: 0 0 8px 0;">You provided a link to your photos:</p>
+            <a href="${imageLink}" style="color: #2563eb; font-size: 13px; word-break: break-all;">${imageLink}</a>
+          </div>
+        </div>
         ` : ""}
 
         <!-- What's Next -->
@@ -272,7 +281,7 @@ const generateCustomerEmailHtml = (body: any, imageCount: number): string => {
 };
 
 // Generate admin notification email HTML
-const generateAdminEmailHtml = (body: any, quoteId: string, imageCount: number): string => {
+const generateAdminEmailHtml = (body: any, quoteId: string, imageCount: number, imageLink?: string): string => {
   const sizeDisplay = body.notSureSize
     ? "Not sure — help me measure"
     : body.width && body.height
@@ -435,6 +444,12 @@ const generateAdminEmailHtml = (body: any, quoteId: string, imageCount: number):
             <p style="color: #1e40af; font-size: 14px; font-weight: 600; margin: 0 0 4px 0;">📎 ${imageCount} photo${imageCount > 1 ? 's' : ''} attached</p>
             <p style="color: #1d4ed8; font-size: 13px; margin: 0;">Download attachments to view customer's uploaded photos</p>
           </div>
+          ` : imageLink ? `
+          <div style="background-color: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 16px;">
+            <p style="color: #1e40af; font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">🔗 Customer provided a link to photos:</p>
+            <a href="${imageLink}" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 500;">Open Photos Link →</a>
+            <p style="color: #1d4ed8; font-size: 12px; margin: 8px 0 0 0; word-break: break-all;">${imageLink}</p>
+          </div>
           ` : `
           <div style="background-color: #fafaf9; border-radius: 8px; padding: 16px; text-align: center;">
             <em style="color: #78716c;">No images uploaded</em>
@@ -529,6 +544,7 @@ export async function POST(request: NextRequest) {
         height: body.height || null,
         notSureSize: body.notSureSize || false,
         images: imagePlaceholders, // Store placeholders, not full image data
+        imageLink: body.imageLink || null,
         repairsNeeded: body.repairsNeeded || false,
         repairNotes: body.repairNotes || null,
         stylePreference: body.stylePreference || null,
@@ -598,13 +614,16 @@ export async function POST(request: NextRequest) {
           }))
         : [];
 
+      // Get image link if provided
+      const imageLink = body.imageLink || undefined;
+
       // Customer confirmation email
       try {
         await resend.emails.send({
           from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
           to: body.email,
           subject: `Thanks for your quote request, ${body.name}! — Model Home Art`,
-          html: generateCustomerEmailHtml(body, imageAttachments.length),
+          html: generateCustomerEmailHtml(body, imageAttachments.length, imageLink),
           attachments: resendAttachments.length > 0 ? resendAttachments : undefined,
         });
       } catch (customerEmailError) {
@@ -619,7 +638,7 @@ export async function POST(request: NextRequest) {
             from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
             to: process.env.ADMIN_EMAIL,
             subject: `🖼️ New Quote: ${capitalize(body.category)} from ${body.name} (${getLabel(quoteOptions.budget, body.budgetRange)})`,
-            html: generateAdminEmailHtml(body, quote.id, imageAttachments.length),
+            html: generateAdminEmailHtml(body, quote.id, imageAttachments.length, imageLink),
             attachments: resendAttachments.length > 0 ? resendAttachments : undefined,
           });
         } catch (adminEmailError) {
