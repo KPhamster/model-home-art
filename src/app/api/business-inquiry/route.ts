@@ -98,10 +98,6 @@ const generateCustomerEmailHtml = (body: any, imageCount: number, imageLink?: st
               <td style="padding: 6px 0; color: #78716c; font-size: 14px;">Delivery/Install:</td>
               <td style="padding: 6px 0; color: #292524; font-size: 14px; font-weight: 500;">${body.deliveryNeeds}</td>
             </tr>` : ""}
-            ${body.invoicing ? `<tr>
-              <td style="padding: 6px 0; color: #78716c; font-size: 14px;">Net-30 Invoicing:</td>
-              <td style="padding: 6px 0; color: #292524; font-size: 14px; font-weight: 500;">Interested</td>
-            </tr>` : ""}
           </table>
         </div>
 
@@ -131,7 +127,6 @@ const generateCustomerEmailHtml = (body: any, imageCount: number, imageLink?: st
           <ul style="color: #1e3a8a; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
             <li>Volume pricing for bulk orders</li>
             <li>Consistent frame styles across projects</li>
-            <li>Net-30 invoicing for established accounts</li>
             <li>Delivery and professional installation</li>
           </ul>
         </div>
@@ -240,10 +235,6 @@ const generateAdminEmailHtml = (body: any, imageCount: number, imageLink?: strin
               <td style="padding: 6px 0; color: #78716c; font-size: 13px;">Delivery/Install:</td>
               <td style="padding: 6px 0; color: #292524; font-size: 13px; font-weight: 600;">${body.deliveryNeeds}</td>
             </tr>` : ""}
-            <tr>
-              <td style="padding: 6px 0; color: #78716c; font-size: 13px;">Net-30 Invoicing:</td>
-              <td style="padding: 6px 0; color: ${body.invoicing ? "#16a34a" : "#292524"}; font-size: 13px; font-weight: 600;">${body.invoicing ? "Yes - Interested" : "Not requested"}</td>
-            </tr>
           </table>
         </div>
 

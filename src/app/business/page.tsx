@@ -7,12 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { businessTypes } from "@/lib/config";
 import { toast } from "sonner";
 import {
-  Building2, Users, Palette, Wrench, Truck, FileText,
+  Building2, Users, Palette, Wrench, Truck,
   Check, ArrowRight, Upload, X
 } from "lucide-react";
 
@@ -57,11 +56,6 @@ const businessServices = [
     title: "Delivery & Installation",
     description: "We deliver and professionally install — even for large projects.",
     icon: Truck,
-  },
-  {
-    title: "Net-30 Invoicing",
-    description: "Flexible payment terms for established business accounts.",
-    icon: FileText,
   },
 ];
 
@@ -170,7 +164,7 @@ export default function BusinessPage() {
               Framing for businesses in the United States
             </h1>
             <p className="text-xl text-muted-foreground mb-8">
-              From offices to hotels, we provide reliable, consistent, affordable framing solutions for businesses of all sizes. Volume pricing and net-30 terms available.
+              From offices to hotels, we provide reliable, consistent, affordable framing solutions for businesses of all sizes. Volume pricing available.
             </p>
             <Button asChild size="lg">
               <a href="#request">Request Business Pricing</a>
@@ -428,13 +422,6 @@ export default function BusinessPage() {
                         placeholder="e.g., delivery to downtown office"
                       />
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Checkbox id="invoicing" name="invoicing" />
-                    <Label htmlFor="invoicing" className="text-sm font-normal">
-                      I'm interested in Net-30 invoicing
-                    </Label>
                   </div>
 
                   <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>

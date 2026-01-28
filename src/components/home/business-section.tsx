@@ -6,7 +6,6 @@ import businessImage from "../../../assets/business_image.png";
 const benefits = [
   "Volume pricing for bulk orders",
   "Consistent frame styles across projects",
-  "Net-30 invoicing available",
   "Delivery and professional installation",
 ];
 
