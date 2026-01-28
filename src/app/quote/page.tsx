@@ -777,7 +777,7 @@ export default function QuotePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
+                  <Label htmlFor="name">Name or Business Name*</Label>
                   <Input
                     id="name"
                     value={formData.name}
