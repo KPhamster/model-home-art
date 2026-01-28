@@ -13,8 +13,24 @@ import { businessTypes } from "@/lib/config";
 import { toast } from "sonner";
 import {
   Building2, Users, Palette, Wrench, Truck, FileText,
-  Check, ArrowRight, Upload
+  Check, ArrowRight, Upload, X
 } from "lucide-react";
+
+// Maximum total upload size: 4MB (Vercel serverless function limit is 4.5MB)
+const MAX_UPLOAD_SIZE_MB = 4;
+const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+
+// Helper to format file size
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return "0 MB";
+  const mb = bytes / (1024 * 1024);
+  return mb < 0.1 ? `${(bytes / 1024).toFixed(1)} KB` : `${mb.toFixed(1)} MB`;
+};
+
+// Helper to calculate total size of files
+const getTotalFileSize = (files: File[]): number => {
+  return files.reduce((total, file) => total + file.size, 0);
+};
 
 const businessServices = [
   {
@@ -59,32 +75,71 @@ const processSteps = [
 
 export default function BusinessPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [images, setImages] = useState<File[]>([]);
+  const [imageLink, setImageLink] = useState("");
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + images.length > 5) {
+      toast.error("Maximum 5 images allowed");
+      return;
+    }
+    
+    const newImages = [...images, ...files].slice(0, 5);
+    const totalSize = getTotalFileSize(newImages);
+    
+    if (totalSize > MAX_UPLOAD_SIZE_BYTES) {
+      toast.error(`Total upload size exceeds ${MAX_UPLOAD_SIZE_MB}MB limit. Please use smaller images or provide a link.`);
+      return;
+    }
+    
+    setImages(newImages);
+    // Clear the input so the same file can be selected again
+    e.target.value = "";
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setIsSubmitting(true);
     
-    const formData = new FormData(e.currentTarget);
-    const data = {
-      businessName: formData.get('businessName'),
-      contactName: formData.get('contactName'),
-      email: formData.get('email'),
-      phone: formData.get('phone'),
-      projectDescription: formData.get('projectDescription'),
-      sizesInfo: formData.get('sizesInfo'),
-      timeline: formData.get('timeline'),
-      deliveryNeeds: formData.get('deliveryNeeds'),
-      invoicing: formData.get('invoicing') === 'on',
-    };
-
+    const formDataEl = new FormData(e.currentTarget);
+    
     try {
+      // Use FormData to send files as binary
+      const submitFormData = new FormData();
+      
+      const formFields = {
+        businessName: formDataEl.get('businessName'),
+        contactName: formDataEl.get('contactName'),
+        email: formDataEl.get('email'),
+        phone: formDataEl.get('phone'),
+        projectDescription: formDataEl.get('projectDescription'),
+        sizesInfo: formDataEl.get('sizesInfo'),
+        timeline: formDataEl.get('timeline'),
+        deliveryNeeds: formDataEl.get('deliveryNeeds'),
+        invoicing: formDataEl.get('invoicing') === 'on',
+        imageLink: imageLink,
+      };
+      
+      submitFormData.append('formData', JSON.stringify(formFields));
+      
+      // Add images as binary files
+      images.forEach((file, index) => {
+        submitFormData.append(`image${index}`, file);
+      });
+
       const response = await fetch('/api/business-inquiry', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        body: submitFormData,
       });
+
+      if (response.status === 413) {
+        throw new Error(`Your photos exceed the ${MAX_UPLOAD_SIZE_MB}MB limit. Please use smaller images or provide a link instead.`);
+      }
 
       const result = await response.json();
 
@@ -94,6 +149,8 @@ export default function BusinessPage() {
 
       toast.success("Request submitted! We'll be in touch within 24 business hours.");
       (e.target as HTMLFormElement).reset();
+      setImages([]);
+      setImageLink("");
     } catch (error) {
       console.error('Business inquiry error:', error);
       toast.error(error instanceof Error ? error.message : "Something went wrong. Please try again.");
@@ -267,15 +324,90 @@ export default function BusinessPage() {
                     />
                   </div>
 
-                  {/* File Upload Placeholder */}
-                  <div className="space-y-2">
-                    <Label>Photos (optional)</Label>
-                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-                      <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">
-                        Drag & drop photos or click to upload
+                  {/* Photo Upload */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label>Photos (optional)</Label>
+                      {images.length > 0 && (
+                        <span className={`text-xs font-medium ${
+                          getTotalFileSize(images) > MAX_UPLOAD_SIZE_BYTES * 0.9
+                            ? "text-amber-600"
+                            : "text-muted-foreground"
+                        }`}>
+                          {formatFileSize(getTotalFileSize(images))} / {MAX_UPLOAD_SIZE_MB} MB
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Image previews */}
+                    {images.length > 0 && (
+                      <div className="grid grid-cols-5 gap-2">
+                        {images.map((file, index) => (
+                          <div
+                            key={index}
+                            className="relative aspect-square bg-stone-100 rounded-lg overflow-hidden group"
+                          >
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`Upload ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-1 py-0.5 text-center">
+                              {formatFileSize(file.size)}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute top-1 right-1 p-0.5 bg-white rounded-full shadow"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {images.length < 5 && (
+                      <label className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors block">
+                        <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          Click to upload photos (max {MAX_UPLOAD_SIZE_MB} MB total)
+                        </p>
+                        <input
+                          type="file"
+                          className="hidden"
+                          multiple
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          disabled={images.length >= 5}
+                        />
+                      </label>
+                    )}
+
+                    {/* OR divider */}
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-muted-foreground">Or</span>
+                      </div>
+                    </div>
+
+                    {/* Image Link */}
+                    <div className="space-y-2">
+                      <Label htmlFor="imageLink">Link to Photos (for larger files)</Label>
+                      <Input
+                        id="imageLink"
+                        type="url"
+                        value={imageLink}
+                        onChange={(e) => setImageLink(e.target.value)}
+                        placeholder="https://drive.google.com/... or https://onedrive.com/..."
+                        disabled={images.length > 0}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        For high-resolution photos or files larger than {MAX_UPLOAD_SIZE_MB} MB, paste a link from Google Drive, OneDrive, Dropbox, or iCloud.
                       </p>
-                      <input type="file" className="hidden" multiple accept="image/*" />
                     </div>
                   </div>
 
