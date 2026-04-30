@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  ClipboardList, Download, Search, Eye, MoreHorizontal,
+  ClipboardList, Download, Search, Eye,
   TrendingUp, Users, DollarSign, Package
 } from "lucide-react";
 
@@ -125,9 +125,14 @@ export default function AdminPage() {
               Manage quote requests and orders
             </p>
           </div>
-          <Button variant="outline" asChild>
-            <Link href="/">View Site</Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/admin/shop">Shop Admin</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/">View Site</Link>
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -154,6 +159,7 @@ export default function AdminPage() {
         <Tabs defaultValue="quotes" className="space-y-4">
           <TabsList>
             <TabsTrigger value="quotes">Quote Requests</TabsTrigger>
+            <TabsTrigger value="shop">Shop</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="contacts">Contact Messages</TabsTrigger>
             <TabsTrigger value="business">Business Inquiries</TabsTrigger>
@@ -241,6 +247,18 @@ export default function AdminPage() {
                     No quote requests found.
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="shop">
+            <Card>
+              <CardContent className="p-8 text-center text-muted-foreground">
+                <Package className="w-12 h-12 mx-auto mb-4" />
+                <p className="mb-4">Create and edit art products, images, pricing, inventory, and collections.</p>
+                <Button asChild>
+                  <Link href="/admin/shop">Open Shop Admin</Link>
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>

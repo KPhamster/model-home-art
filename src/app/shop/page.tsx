@@ -3,37 +3,50 @@ import { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import prisma from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Shop Framed Art",
   description: "Shop framed art in popular sizes. Modern, classic, gallery sets, and shadow boxes.",
 };
 
-// Placeholder data
-const collections = [
-  { id: "modern", name: "Modern", description: "Clean lines and contemporary styles", count: 24, image: "/collections/modern.jpg" },
-  { id: "classic", name: "Classic", description: "Timeless traditional frames", count: 18, image: "/collections/classic.jpg" },
-  { id: "gallery-sets", name: "Gallery Sets", description: "Curated frame collections for gallery walls", count: 12, image: "/collections/gallery.jpg" },
-  { id: "shadow-boxes", name: "Shadow Boxes", description: "Deep frames for 3D displays", count: 8, image: "/collections/shadow.jpg" },
-  { id: "poster-frames", name: "Poster Frames", description: "Large format frames for posters", count: 15, image: "/collections/poster.jpg" },
-  { id: "floating", name: "Floating Frames", description: "Modern floating edge designs", count: 10, image: "/collections/floating.jpg" },
-];
+function formatMoney(cents: number) {
+  return `$${(cents / 100).toFixed(2)}`;
+}
 
-const featuredProducts = [
-  { id: "1", slug: "modern-black-8x10", name: "Modern Black Frame", size: "8×10", price: 2499, collection: "modern" },
-  { id: "2", slug: "classic-walnut-11x14", name: "Classic Walnut Frame", size: "11×14", price: 3499, collection: "classic" },
-  { id: "3", slug: "white-gallery-16x20", name: "White Gallery Frame", size: "16×20", price: 4499, collection: "modern" },
-  { id: "4", slug: "gold-ornate-8x10", name: "Gold Ornate Frame", size: "8×10", price: 3999, collection: "classic" },
-  { id: "5", slug: "natural-oak-11x14", name: "Natural Oak Frame", size: "11×14", price: 3299, collection: "modern" },
-  { id: "6", slug: "slim-metal-5x7", name: "Slim Metal Frame", size: "5×7", price: 1999, collection: "modern" },
-  { id: "7", slug: "floating-12x12", name: "Floating Frame", size: "12×12", price: 3799, collection: "floating" },
-  { id: "8", slug: "shadow-box-8x8", name: "Shadow Box Frame", size: "8×8", price: 4299, collection: "shadow-boxes" },
-];
+function ProductImage({ src, alt }: { src?: string | null; alt: string }) {
+  if (src) {
+    return <img src={src} alt={alt} className="h-full w-full object-cover transition-transform group-hover:scale-105" />;
+  }
 
-export default function ShopPage() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center text-stone-400">
+      <div className="text-center">
+        <div className="w-16 h-16 mx-auto mb-2 border-4 border-stone-300 rounded" />
+        <p className="text-xs">[Product Image]</p>
+      </div>
+    </div>
+  );
+}
+
+export default async function ShopPage() {
+  const [collections, featuredProducts] = await Promise.all([
+    prisma.collection.findMany({
+      include: { _count: { select: { products: true } } },
+      orderBy: [{ order: "asc" }, { name: "asc" }],
+    }),
+    prisma.product.findMany({
+      where: { featured: true, inStock: true },
+      include: { collection: true },
+      orderBy: { updatedAt: "desc" },
+      take: 8,
+    }),
+  ]);
+
   return (
     <>
-      {/* Hero */}
       <section className="py-12 lg:py-16 bg-gradient-to-b from-stone-100 to-background">
         <div className="container-wide">
           <div className="max-w-3xl mx-auto text-center">
@@ -51,23 +64,25 @@ export default function ShopPage() {
         </div>
       </section>
 
-      {/* Collections */}
       <section className="py-12 lg:py-16 bg-background">
         <div className="container-wide">
           <h2 className="text-2xl font-heading font-semibold mb-8">Shop by Collection</h2>
-          
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {collections.map((collection) => (
-              <Link key={collection.id} href={`/shop/${collection.id}`}>
+              <Link key={collection.id} href={`/shop/${collection.slug}`}>
                 <Card className="group overflow-hidden hover:shadow-lg transition-shadow h-full">
-                  <div className="aspect-[3/2] bg-stone-200 relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                      <span className="text-sm">[Collection Image]</span>
-                    </div>
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
+                  <div className="aspect-[3/2] bg-stone-200 relative overflow-hidden">
+                    {collection.image ? (
+                      <img src={collection.image} alt={collection.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                        <span className="text-sm">[Collection Image]</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition-colors" />
                     <div className="absolute bottom-4 left-4 text-white">
                       <h3 className="text-xl font-semibold">{collection.name}</h3>
-                      <p className="text-sm text-white/80">{collection.count} frames</p>
+                      <p className="text-sm text-white/80">{collection._count.products} products</p>
                     </div>
                   </div>
                   <CardContent className="p-4">
@@ -80,7 +95,6 @@ export default function ShopPage() {
         </div>
       </section>
 
-      {/* Featured Products */}
       <section className="py-12 lg:py-16 bg-stone-50">
         <div className="container-wide">
           <div className="flex items-center justify-between mb-8">
@@ -89,42 +103,39 @@ export default function ShopPage() {
               View all →
             </Link>
           </div>
-          
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
             {featuredProducts.map((product) => (
               <Link key={product.id} href={`/shop/product/${product.slug}`}>
                 <Card className="group overflow-hidden hover:shadow-md transition-shadow h-full">
-                  <div className="aspect-square bg-stone-100 relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-stone-400">
-                      <div className="text-center">
-                        <div className="w-16 h-16 mx-auto mb-2 border-4 border-stone-300 rounded" />
-                        <p className="text-xs">[Product Image]</p>
-                      </div>
-                    </div>
+                  <div className="aspect-square bg-stone-100 relative overflow-hidden">
+                    <ProductImage src={product.images[0]} alt={product.name} />
                   </div>
                   <CardContent className="p-4">
                     <h3 className="font-medium text-sm group-hover:text-primary transition-colors line-clamp-1">
                       {product.name}
                     </h3>
-                    <p className="text-xs text-muted-foreground mt-1">{product.size}</p>
-                    <p className="font-semibold mt-2">${(product.price / 100).toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {product.sizes[0] ?? product.collection?.name ?? "Ready to ship"}
+                    </p>
+                    <p className="font-semibold mt-2">{formatMoney(product.price)}</p>
                   </CardContent>
                 </Card>
               </Link>
             ))}
           </div>
+          {featuredProducts.length === 0 ? (
+            <p className="text-muted-foreground">No featured products yet.</p>
+          ) : null}
         </div>
       </section>
 
-      {/* Custom Framing CTA */}
       <section className="py-12 lg:py-16 bg-primary text-white">
         <div className="container-wide text-center">
           <h2 className="text-2xl md:text-3xl font-heading font-semibold mb-4">
             Need something custom?
           </h2>
           <p className="text-lg text-white/80 mb-6 max-w-2xl mx-auto">
-            Our ready-made frames are great for standard sizes. For custom dimensions 
-            or special items, get a custom framing quote.
+            Our ready-made frames are great for standard sizes. For custom dimensions or special items, get a custom framing quote.
           </p>
           <Button asChild variant="secondary" size="lg" className="bg-white text-primary hover:bg-white/90">
             <Link href="/quote">Get a Custom Quote</Link>
