@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ImageUploadField } from "@/components/admin/image-upload-field";
 import { Textarea } from "@/components/ui/textarea";
 import prisma from "@/lib/db";
 import { createCollection, createProduct } from "./actions";
@@ -136,15 +137,12 @@ export default async function AdminShopPage() {
                   <Label htmlFor="product-description">Description</Label>
                   <Textarea id="product-description" name="description" rows={3} />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="product-images">Image URLs</Label>
-                  <Textarea
-                    id="product-images"
-                    name="images"
-                    rows={3}
-                    placeholder="One URL per line, or comma-separated"
-                  />
-                </div>
+                <ImageUploadField
+                  id="product-images"
+                  name="images"
+                  label="Images"
+                  placeholder="One URL per line, or upload files above"
+                />
                 <div className="grid gap-2">
                   <Label htmlFor="product-sizes">Sizes</Label>
                   <Input id="product-sizes" name="sizes" placeholder="8×10, 11×14, 16×20" />
@@ -190,10 +188,13 @@ export default async function AdminShopPage() {
                   <Label htmlFor="collection-description">Description</Label>
                   <Textarea id="collection-description" name="description" rows={3} />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="collection-image">Image URL</Label>
-                  <Input id="collection-image" name="image" placeholder="https://..." />
-                </div>
+                <ImageUploadField
+                  id="collection-image"
+                  name="image"
+                  label="Collection image"
+                  multiple={false}
+                  placeholder="https://... or upload a file above"
+                />
                 <div className="grid gap-2 md:grid-cols-2">
                   <div className="grid gap-2">
                     <Label htmlFor="collection-order">Sort order</Label>

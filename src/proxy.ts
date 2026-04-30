@@ -17,6 +17,17 @@ export function proxy(request: NextRequest) {
     return new NextResponse("Not found", { status: 404 });
   }
 
+  // UploadThing sends signed server-to-server callbacks after the browser uploads
+  // directly to storage. Let those through so the route handler can verify the
+  // UploadThing signature; keep browser/admin upload actions behind Basic Auth.
+  const uploadThingHook = request.headers.get("uploadthing-hook");
+  if (
+    pathname === "/admin/api/uploadthing" &&
+    (uploadThingHook === "callback" || uploadThingHook === "error")
+  ) {
+    return NextResponse.next();
+  }
+
   const authHeader = request.headers.get("authorization");
   const expected = `Basic ${btoa(`${username}:${password}`)}`;
 

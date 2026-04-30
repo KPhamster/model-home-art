@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ImageUploadField } from "@/components/admin/image-upload-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -61,10 +62,14 @@ export default async function EditCollectionPage({ params }: PageProps) {
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" name="description" rows={4} defaultValue={collection.description ?? ""} />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="image">Image URL</Label>
-                <Input id="image" name="image" defaultValue={collection.image ?? ""} />
-              </div>
+              <ImageUploadField
+                id="image"
+                name="image"
+                label="Collection image"
+                defaultValue={collection.image ?? ""}
+                multiple={false}
+                placeholder="https://... or upload a file above"
+              />
               <div className="grid gap-2 md:grid-cols-2">
                 <div className="grid gap-2">
                   <Label htmlFor="order">Sort order</Label>
