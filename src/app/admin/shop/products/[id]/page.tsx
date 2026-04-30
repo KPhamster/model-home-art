@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ImageUploadField } from "@/components/admin/image-upload-field";
+import { ProductImageSizeFields } from "@/components/admin/product-image-size-fields";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -90,17 +90,14 @@ export default async function EditProductPage({ params }: PageProps) {
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" name="description" rows={4} defaultValue={product.description ?? ""} />
               </div>
-              <ImageUploadField
-                id="images"
-                name="images"
-                label="Images"
-                defaultValue={product.images.join("\n")}
-                placeholder="One URL per line, or upload files above"
+              <ProductImageSizeFields
+                imageId="images"
+                imageName="images"
+                imageDefaultValue={product.images.join("\n")}
+                sizeId="size"
+                sizeName="sizes"
+                sizeDefaultValue={product.sizes[0] ?? ""}
               />
-              <div className="grid gap-2">
-                <Label htmlFor="sizes">Sizes</Label>
-                <Input id="sizes" name="sizes" defaultValue={product.sizes.join(", ")} />
-              </div>
               <div className="grid gap-2">
                 <Label htmlFor="materials">Materials</Label>
                 <Textarea id="materials" name="materials" rows={3} defaultValue={product.materials ?? ""} />

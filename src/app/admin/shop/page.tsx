@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ImageUploadField } from "@/components/admin/image-upload-field";
+import { ProductImageSizeFields } from "@/components/admin/product-image-size-fields";
 import { Textarea } from "@/components/ui/textarea";
 import prisma from "@/lib/db";
 import { createCollection, createProduct } from "./actions";
@@ -137,16 +138,12 @@ export default async function AdminShopPage() {
                   <Label htmlFor="product-description">Description</Label>
                   <Textarea id="product-description" name="description" rows={3} />
                 </div>
-                <ImageUploadField
-                  id="product-images"
-                  name="images"
-                  label="Images"
-                  placeholder="One URL per line, or upload files above"
+                <ProductImageSizeFields
+                  imageId="product-images"
+                  imageName="images"
+                  sizeId="product-size"
+                  sizeName="sizes"
                 />
-                <div className="grid gap-2">
-                  <Label htmlFor="product-sizes">Sizes</Label>
-                  <Input id="product-sizes" name="sizes" placeholder="8×10, 11×14, 16×20" />
-                </div>
                 <div className="grid gap-2">
                   <Label htmlFor="product-materials">Materials</Label>
                   <Textarea id="product-materials" name="materials" rows={2} />

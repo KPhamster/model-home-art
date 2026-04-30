@@ -19,6 +19,30 @@ function uploadedUrl(file: ClientUploadedFileData<{ url: string; name: string }>
   return file.serverData?.url || file.ufsUrl || file.url;
 }
 
+export interface ImageDimensions {
+  width: number;
+  height: number;
+}
+
+function readImageDimensions(file: File) {
+  return new Promise<ImageDimensions>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve({ width: image.naturalWidth, height: image.naturalHeight });
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Could not read image dimensions."));
+    };
+
+    image.src = objectUrl;
+  });
+}
+
 interface ImageUploadFieldProps {
   id: string;
   name: string;
@@ -26,6 +50,7 @@ interface ImageUploadFieldProps {
   defaultValue?: string;
   multiple?: boolean;
   placeholder?: string;
+  onImageDimensions?: (dimensions: ImageDimensions) => void;
 }
 
 export function ImageUploadField({
@@ -35,6 +60,7 @@ export function ImageUploadField({
   defaultValue = "",
   multiple = true,
   placeholder = "Paste image URLs or upload files",
+  onImageDimensions,
 }: ImageUploadFieldProps) {
   const [value, setValue] = useState(defaultValue);
   const urls = useMemo(() => parseUrls(value), [value]);
@@ -54,6 +80,16 @@ export function ImageUploadField({
         <UploadButton<AdminUploadRouter, "shopImageUploader">
           endpoint="shopImageUploader"
           url="/admin/api/uploadthing"
+          onChange={(files) => {
+            const firstImage = files.find((file) => file.type.startsWith("image/"));
+            if (!firstImage || !onImageDimensions) return;
+
+            readImageDimensions(firstImage)
+              .then(onImageDimensions)
+              .catch(() => {
+                // Upload can still proceed; size auto-fill is best effort.
+              });
+          }}
           onClientUploadComplete={(files) => {
             appendUrls(files.map(uploadedUrl).filter(Boolean));
           }}
