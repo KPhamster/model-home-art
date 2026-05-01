@@ -96,12 +96,11 @@ export function ProductImageSizeFields({
   const applyImageDimensions = ({ width: pixelWidth, height: pixelHeight }: { width: number; height: number }) => {
     if (!pixelWidth || !pixelHeight) return;
 
-    const longSide = Math.max(pixelWidth, pixelHeight);
-    const shortSide = Math.min(pixelWidth, pixelHeight);
-
-    setRatio(longSide / shortSide);
-    setLength(String(roundedSize(longSide)));
-    setWidth(String(roundedSize(shortSide)));
+    // Browser image dimensions are width × height. For product sizing, map
+    // height to Length and width to Width.
+    setRatio(pixelHeight / pixelWidth);
+    setLength(String(roundedSize(pixelHeight)));
+    setWidth(String(roundedSize(pixelWidth)));
   };
 
   const handleFilesChange = (files: FileList | null) => {
