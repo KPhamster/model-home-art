@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ImageUploadField } from "@/components/admin/image-upload-field";
+import { DeferredImageField } from "@/components/admin/deferred-image-field";
 import { NameSlugFields } from "@/components/admin/name-slug-fields";
 import { ProductImageSizeFields } from "@/components/admin/product-image-size-fields";
 import { Textarea } from "@/components/ui/textarea";
@@ -182,12 +182,13 @@ export default async function AdminShopPage() {
                   <Label htmlFor="collection-description">Description</Label>
                   <Textarea id="collection-description" name="description" rows={3} />
                 </div>
-                <ImageUploadField
+                <DeferredImageField
                   id="collection-image"
-                  name="image"
+                  fileName="collectionImageFile"
+                  valueName="image"
                   label="Collection image"
-                  multiple={false}
-                  placeholder="https://... or upload a file above"
+                  helperText="Image stays local until you create the collection."
+                  placeholder="https://... or choose a file above"
                 />
                 <div className="grid gap-2 md:grid-cols-2">
                   <div className="grid gap-2">

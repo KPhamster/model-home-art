@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ImageUploadField } from "@/components/admin/image-upload-field";
+import { DeferredImageField } from "@/components/admin/deferred-image-field";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -62,13 +62,14 @@ export default async function EditCollectionPage({ params }: PageProps) {
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" name="description" rows={4} defaultValue={collection.description ?? ""} />
               </div>
-              <ImageUploadField
+              <DeferredImageField
                 id="image"
-                name="image"
+                fileName="collectionImageFile"
+                valueName="image"
                 label="Collection image"
                 defaultValue={collection.image ?? ""}
-                multiple={false}
-                placeholder="https://... or upload a file above"
+                helperText="Image stays local until you save the collection."
+                placeholder="https://... or choose a file above"
               />
               <div className="grid gap-2 md:grid-cols-2">
                 <div className="grid gap-2">

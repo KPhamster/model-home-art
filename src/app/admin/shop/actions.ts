@@ -44,23 +44,38 @@ function productImageFiles(formData: FormData) {
     .filter((value): value is File => value instanceof File && value.size > 0 && value.type.startsWith("image/"));
 }
 
-async function productImageUrls(formData: FormData) {
-  const existingUrls = listValue(formData, "images");
-  const files = productImageFiles(formData);
-
-  if (!files.length) return existingUrls;
+async function uploadImages(files: File[]) {
+  if (!files.length) return [];
 
   const utapi = new UTApi();
   const uploads = await utapi.uploadFiles(files, { concurrency: 3 });
-  const uploadedUrls = uploads.map((upload) => {
+
+  return uploads.map((upload) => {
     if (upload.error) {
       throw new Error(upload.error.message || "Image upload failed");
     }
 
     return upload.data.ufsUrl;
   });
+}
+
+async function productImageUrls(formData: FormData) {
+  const existingUrls = listValue(formData, "images");
+  const uploadedUrls = await uploadImages(productImageFiles(formData));
 
   return [...existingUrls, ...uploadedUrls];
+}
+
+async function collectionImageUrl(formData: FormData) {
+  const existingUrl = optionalString(formData, "image");
+  const file = formData.get("collectionImageFile");
+
+  if (!(file instanceof File) || file.size === 0 || !file.type.startsWith("image/")) {
+    return existingUrl;
+  }
+
+  const [uploadedUrl] = await uploadImages([file]);
+  return uploadedUrl ?? existingUrl;
 }
 
 function slugify(value: string) {
@@ -85,13 +100,14 @@ export async function createCollection(formData: FormData) {
   if (!name) return;
 
   const slug = stringValue(formData, "slug") || slugify(name);
+  const image = await collectionImageUrl(formData);
 
   await prisma.collection.create({
     data: {
       name,
       slug,
       description: optionalString(formData, "description"),
-      image: optionalString(formData, "image"),
+      image,
       order: intValue(formData, "order"),
       featured: boolValue(formData, "featured"),
     },
@@ -105,13 +121,15 @@ export async function updateCollection(id: string, formData: FormData) {
   const name = stringValue(formData, "name");
   if (!name) return;
 
+  const image = await collectionImageUrl(formData);
+
   await prisma.collection.update({
     where: { id },
     data: {
       name,
       slug: stringValue(formData, "slug") || slugify(name),
       description: optionalString(formData, "description"),
-      image: optionalString(formData, "image"),
+      image,
       order: intValue(formData, "order"),
       featured: boolValue(formData, "featured"),
     },
