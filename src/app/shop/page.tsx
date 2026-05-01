@@ -16,6 +16,13 @@ function formatMoney(cents: number) {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
+function firstImage(value?: string | null) {
+  return value
+    ?.split(/[\n,]/)
+    .map((url) => url.trim())
+    .filter(Boolean)[0];
+}
+
 function ProductImage({ src, alt }: { src?: string | null; alt: string }) {
   if (src) {
     return <img src={src} alt={alt} className="h-full w-full object-cover transition-transform group-hover:scale-105" />;
@@ -72,8 +79,8 @@ export default async function ShopPage() {
               <Link key={collection.id} href={`/shop/${collection.slug}`}>
                 <Card className="group overflow-hidden hover:shadow-lg transition-shadow h-full">
                   <div className="aspect-[3/2] bg-stone-200 relative overflow-hidden">
-                    {collection.image ? (
-                      <img src={collection.image} alt={collection.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                    {firstImage(collection.image) ? (
+                      <img src={firstImage(collection.image)} alt={collection.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                         <span className="text-sm">[Collection Image]</span>

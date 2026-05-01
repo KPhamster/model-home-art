@@ -64,12 +64,13 @@ export default async function EditCollectionPage({ params }: PageProps) {
               </div>
               <DeferredImageField
                 id="image"
-                fileName="collectionImageFile"
+                fileName="collectionImageFiles"
                 valueName="image"
-                label="Collection image"
+                label="Collection images"
                 defaultValue={collection.image ?? ""}
-                helperText="Image stays local until you save the collection."
-                placeholder="https://... or choose a file above"
+                multiple
+                helperText="Images stay local until you save the collection. The first image is used as the cover."
+                placeholder="One URL per line, or choose files above"
               />
               <div className="grid gap-2 md:grid-cols-2">
                 <div className="grid gap-2">

@@ -184,11 +184,12 @@ export default async function AdminShopPage() {
                 </div>
                 <DeferredImageField
                   id="collection-image"
-                  fileName="collectionImageFile"
+                  fileName="collectionImageFiles"
                   valueName="image"
-                  label="Collection image"
-                  helperText="Image stays local until you create the collection."
-                  placeholder="https://... or choose a file above"
+                  label="Collection images"
+                  multiple
+                  helperText="Images stay local until you create the collection. The first image is used as the cover."
+                  placeholder="One URL per line, or choose files above"
                 />
                 <div className="grid gap-2 md:grid-cols-2">
                   <div className="grid gap-2">

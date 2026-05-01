@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 function parseUrls(value: string) {
   return value
@@ -74,13 +75,24 @@ export function DeferredImageField({
         <p className="mt-2 text-xs text-muted-foreground">{helperText}</p>
       </div>
 
-      <Input
-        id={id}
-        name={valueName}
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        placeholder={placeholder}
-      />
+      {multiple ? (
+        <Textarea
+          id={id}
+          name={valueName}
+          rows={4}
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder={placeholder}
+        />
+      ) : (
+        <Input
+          id={id}
+          name={valueName}
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder={placeholder}
+        />
+      )}
 
       {previews.length > 0 || existingUrls.length > 0 ? (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">

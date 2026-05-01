@@ -66,16 +66,18 @@ async function productImageUrls(formData: FormData) {
   return [...existingUrls, ...uploadedUrls];
 }
 
-async function collectionImageUrl(formData: FormData) {
-  const existingUrl = optionalString(formData, "image");
-  const file = formData.get("collectionImageFile");
+function collectionImageFiles(formData: FormData) {
+  return formData
+    .getAll("collectionImageFiles")
+    .filter((value): value is File => value instanceof File && value.size > 0 && value.type.startsWith("image/"));
+}
 
-  if (!(file instanceof File) || file.size === 0 || !file.type.startsWith("image/")) {
-    return existingUrl;
-  }
+async function collectionImageValue(formData: FormData) {
+  const existingUrls = listValue(formData, "image");
+  const uploadedUrls = await uploadImages(collectionImageFiles(formData));
+  const images = [...existingUrls, ...uploadedUrls];
 
-  const [uploadedUrl] = await uploadImages([file]);
-  return uploadedUrl ?? existingUrl;
+  return images.length ? images.join("\n") : null;
 }
 
 function slugify(value: string) {
@@ -100,7 +102,7 @@ export async function createCollection(formData: FormData) {
   if (!name) return;
 
   const slug = stringValue(formData, "slug") || slugify(name);
-  const image = await collectionImageUrl(formData);
+  const image = await collectionImageValue(formData);
 
   await prisma.collection.create({
     data: {
@@ -121,7 +123,7 @@ export async function updateCollection(id: string, formData: FormData) {
   const name = stringValue(formData, "name");
   if (!name) return;
 
-  const image = await collectionImageUrl(formData);
+  const image = await collectionImageValue(formData);
 
   await prisma.collection.update({
     where: { id },
