@@ -188,7 +188,7 @@ export default async function AdminShopPage() {
                   valueName="image"
                   label="Collection images"
                   multiple
-                  helperText="Images stay local until you create the collection. The first image is used as the cover."
+                  helperText="Images stay local until you create the collection. The first image is used as the cover; each uploaded image creates a draft product in this collection."
                   placeholder="One URL per line, or choose files above"
                 />
                 <div className="grid gap-2 md:grid-cols-2">

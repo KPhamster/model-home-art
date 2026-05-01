@@ -72,12 +72,16 @@ function collectionImageFiles(formData: FormData) {
     .filter((value): value is File => value instanceof File && value.size > 0 && value.type.startsWith("image/"));
 }
 
-async function collectionImageValue(formData: FormData) {
+async function collectionImageUploadData(formData: FormData) {
   const existingUrls = listValue(formData, "image");
-  const uploadedUrls = await uploadImages(collectionImageFiles(formData));
+  const files = collectionImageFiles(formData);
+  const uploadedUrls = await uploadImages(files);
   const images = [...existingUrls, ...uploadedUrls];
 
-  return images.length ? images.join("\n") : null;
+  return {
+    image: images.length ? images.join("\n") : null,
+    uploadedImages: uploadedUrls.map((url, index) => ({ file: files[index], url })),
+  };
 }
 
 function slugify(value: string) {
@@ -87,6 +91,58 @@ function slugify(value: string) {
     .replace(/['"]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function titleFromFilename(file: File | undefined, fallback: string) {
+  const stem = file?.name.replace(/\.[^.]+$/, "") || fallback;
+  const title = stem
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+  return title || fallback;
+}
+
+async function uniqueProductSlug(base: string) {
+  const root = slugify(base) || "product";
+  let slug = root;
+  let counter = 2;
+
+  while (await prisma.product.findUnique({ where: { slug }, select: { id: true } })) {
+    slug = `${root}-${counter}`;
+    counter += 1;
+  }
+
+  return slug;
+}
+
+async function createDraftProductsFromCollectionImages(
+  collectionId: string,
+  collectionName: string,
+  uploadedImages: { file: File | undefined; url: string }[],
+) {
+  for (const [index, image] of uploadedImages.entries()) {
+    const imageTitle = titleFromFilename(image.file, `Image ${index + 1}`);
+    const name = `${collectionName} - ${imageTitle}`;
+
+    await prisma.product.create({
+      data: {
+        name,
+        slug: await uniqueProductSlug(name),
+        description: null,
+        price: 0,
+        comparePrice: null,
+        images: [image.url],
+        sizes: [],
+        materials: null,
+        inStock: false,
+        inventory: 0,
+        featured: false,
+        collectionId,
+      },
+    });
+  }
 }
 
 function refreshShop() {
@@ -102,9 +158,9 @@ export async function createCollection(formData: FormData) {
   if (!name) return;
 
   const slug = stringValue(formData, "slug") || slugify(name);
-  const image = await collectionImageValue(formData);
+  const { image, uploadedImages } = await collectionImageUploadData(formData);
 
-  await prisma.collection.create({
+  const collection = await prisma.collection.create({
     data: {
       name,
       slug,
@@ -115,6 +171,8 @@ export async function createCollection(formData: FormData) {
     },
   });
 
+  await createDraftProductsFromCollectionImages(collection.id, collection.name, uploadedImages);
+
   refreshShop();
   redirect("/admin/shop");
 }
@@ -123,9 +181,9 @@ export async function updateCollection(id: string, formData: FormData) {
   const name = stringValue(formData, "name");
   if (!name) return;
 
-  const image = await collectionImageValue(formData);
+  const { image, uploadedImages } = await collectionImageUploadData(formData);
 
-  await prisma.collection.update({
+  const collection = await prisma.collection.update({
     where: { id },
     data: {
       name,
@@ -136,6 +194,8 @@ export async function updateCollection(id: string, formData: FormData) {
       featured: boolValue(formData, "featured"),
     },
   });
+
+  await createDraftProductsFromCollectionImages(collection.id, collection.name, uploadedImages);
 
   refreshShop();
   redirect("/admin/shop");

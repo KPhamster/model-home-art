@@ -69,7 +69,7 @@ export default async function EditCollectionPage({ params }: PageProps) {
                 label="Collection images"
                 defaultValue={collection.image ?? ""}
                 multiple
-                helperText="Images stay local until you save the collection. The first image is used as the cover."
+                helperText="Images stay local until you save the collection. The first image is used as the cover; each newly uploaded image creates a draft product in this collection."
                 placeholder="One URL per line, or choose files above"
               />
               <div className="grid gap-2 md:grid-cols-2">
