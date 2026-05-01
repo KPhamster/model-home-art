@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 const SHRINK_FACTOR = 80;
 
 interface PreviewImage {
+  file: File;
   name: string;
   url: string;
 }
@@ -30,6 +31,10 @@ function parseUrls(value: string) {
     .split(/[\n,]/)
     .map((url) => url.trim())
     .filter(Boolean);
+}
+
+function urlsToValue(urls: string[]) {
+  return urls.join("\n");
 }
 
 function numeric(value: string) {
@@ -73,6 +78,7 @@ export function ProductImageSizeFields({
   sizeName,
   sizeDefaultValue = "",
 }: ProductImageSizeFieldsProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const initialSize = useMemo(() => parseFirstSize(sizeDefaultValue), [sizeDefaultValue]);
   const [imageUrls, setImageUrls] = useState(imageDefaultValue);
   const [previews, setPreviews] = useState<PreviewImage[]>([]);
@@ -103,18 +109,21 @@ export function ProductImageSizeFields({
     setWidth(String(roundedSize(pixelWidth)));
   };
 
-  const handleFilesChange = (files: FileList | null) => {
-    previews.forEach((preview) => URL.revokeObjectURL(preview.url));
+  const syncInputFiles = (nextPreviews: PreviewImage[]) => {
+    if (!fileInputRef.current) return;
 
-    const selectedFiles = Array.from(files ?? []).filter((file) => file.type.startsWith("image/"));
-    setPreviews(
-      selectedFiles.map((file) => ({
-        name: file.name,
-        url: URL.createObjectURL(file),
-      })),
-    );
+    const dataTransfer = new DataTransfer();
+    nextPreviews.forEach((preview) => dataTransfer.items.add(preview.file));
+    fileInputRef.current.files = dataTransfer.files;
+  };
 
-    const firstImage = selectedFiles[0];
+  const setSyncedPreviews = (nextPreviews: PreviewImage[]) => {
+    setPreviews(nextPreviews);
+    syncInputFiles(nextPreviews);
+  };
+
+  const inferSizeFromFirstPreview = (nextPreviews: PreviewImage[]) => {
+    const firstImage = nextPreviews[0]?.file;
     if (!firstImage) return;
 
     readImageDimensions(firstImage)
@@ -122,6 +131,33 @@ export function ProductImageSizeFields({
       .catch(() => {
         // Product creation can still proceed; size auto-fill is best effort.
       });
+  };
+
+  const handleFilesChange = (files: FileList | null) => {
+    previews.forEach((preview) => URL.revokeObjectURL(preview.url));
+
+    const selectedFiles = Array.from(files ?? []).filter((file) => file.type.startsWith("image/"));
+    const nextPreviews = selectedFiles.map((file) => ({
+      file,
+      name: file.name,
+      url: URL.createObjectURL(file),
+    }));
+
+    setSyncedPreviews(nextPreviews);
+    inferSizeFromFirstPreview(nextPreviews);
+  };
+
+  const removePreview = (index: number) => {
+    const removed = previews[index];
+    if (removed) URL.revokeObjectURL(removed.url);
+
+    const nextPreviews = previews.filter((_, previewIndex) => previewIndex !== index);
+    setSyncedPreviews(nextPreviews);
+    if (index === 0) inferSizeFromFirstPreview(nextPreviews);
+  };
+
+  const removeExistingUrl = (index: number) => {
+    setImageUrls(urlsToValue(existingUrls.filter((_, urlIndex) => urlIndex !== index)));
   };
 
   const handleLengthChange = (value: string) => {
@@ -144,6 +180,7 @@ export function ProductImageSizeFields({
         <Label htmlFor={`${imageId}-files`}>Images</Label>
         <div className="rounded-lg border bg-stone-50 p-3">
           <Input
+            ref={fileInputRef}
             id={`${imageId}-files`}
             name="imageFiles"
             type="file"
@@ -167,14 +204,28 @@ export function ProductImageSizeFields({
 
         {previews.length > 0 || existingUrls.length > 0 ? (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {previews.map((preview) => (
-              <div key={preview.url} className="aspect-square overflow-hidden rounded-md border bg-white">
+            {previews.map((preview, index) => (
+              <div key={preview.url} className="group relative aspect-square overflow-hidden rounded-md border bg-white">
                 <img src={preview.url} alt={preview.name} className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removePreview(index)}
+                  className="absolute right-1 top-1 rounded bg-black/65 px-2 py-1 text-xs text-white opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
+                >
+                  Remove
+                </button>
               </div>
             ))}
-            {existingUrls.map((url) => (
-              <div key={url} className="aspect-square overflow-hidden rounded-md border bg-white">
+            {existingUrls.map((url, index) => (
+              <div key={url} className="group relative aspect-square overflow-hidden rounded-md border bg-white">
                 <img src={url} alt="Existing product" className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeExistingUrl(index)}
+                  className="absolute right-1 top-1 rounded bg-black/65 px-2 py-1 text-xs text-white opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
+                >
+                  Remove
+                </button>
               </div>
             ))}
           </div>
