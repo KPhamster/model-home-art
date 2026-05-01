@@ -22,6 +22,10 @@ interface PreviewImage {
   url: string;
 }
 
+type OrderedImage =
+  | { id: string; type: "preview"; previewIndex: number; src: string; alt: string }
+  | { id: string; type: "existing"; existingIndex: number; src: string; alt: string };
+
 interface DeferredImageFieldProps {
   id: string;
   fileName: string;
@@ -46,7 +50,19 @@ export function DeferredImageField({
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState(defaultValue);
   const [previews, setPreviews] = useState<PreviewImage[]>([]);
+  const [order, setOrder] = useState<string[]>([]);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
   const existingUrls = useMemo(() => parseUrls(value), [value]);
+
+  const previewIds = useMemo(() => previews.map((preview) => `preview:${preview.url}`), [previews]);
+  const existingIds = useMemo(() => existingUrls.map((url, index) => `existing:${index}:${url}`), [existingUrls]);
+  const allIds = useMemo(() => [...previewIds, ...existingIds], [previewIds, existingIds]);
+
+  const effectiveOrder = useMemo(() => {
+    const keptIds = order.filter((imageId) => allIds.includes(imageId));
+    const addedIds = allIds.filter((imageId) => !keptIds.includes(imageId));
+    return [...keptIds, ...addedIds];
+  }, [allIds, order]);
 
   useEffect(() => {
     return () => {
@@ -67,6 +83,49 @@ export function DeferredImageField({
     syncInputFiles(nextPreviews);
   };
 
+  const orderedImages = useMemo(() => {
+    const previewItems = new Map(
+      previews.map((preview, previewIndex) => [
+        `preview:${preview.url}`,
+        {
+          id: `preview:${preview.url}`,
+          type: "preview" as const,
+          previewIndex,
+          src: preview.url,
+          alt: preview.name,
+        },
+      ]),
+    );
+    const existingItems = new Map(
+      existingUrls.map((url, existingIndex) => [
+        `existing:${existingIndex}:${url}`,
+        {
+          id: `existing:${existingIndex}:${url}`,
+          type: "existing" as const,
+          existingIndex,
+          src: url,
+          alt: "Existing",
+        },
+      ]),
+    );
+
+    return effectiveOrder
+      .map((imageId) => previewItems.get(imageId) ?? existingItems.get(imageId))
+      .filter((item): item is OrderedImage => Boolean(item));
+  }, [effectiveOrder, existingUrls, previews]);
+
+  const imageOrderValue = useMemo(
+    () =>
+      JSON.stringify(
+        orderedImages.map((image) =>
+          image.type === "preview"
+            ? { type: "uploaded", index: image.previewIndex }
+            : { type: "existing", url: existingUrls[image.existingIndex] },
+        ),
+      ),
+    [existingUrls, orderedImages],
+  );
+
   const handleFilesChange = (files: FileList | null) => {
     previews.forEach((preview) => URL.revokeObjectURL(preview.url));
 
@@ -86,26 +145,35 @@ export function DeferredImageField({
     setSyncedPreviews(previews.filter((_, previewIndex) => previewIndex !== index));
   };
 
-  const movePreview = (index: number, direction: -1 | 1) => {
-    const nextIndex = index + direction;
-    if (nextIndex < 0 || nextIndex >= previews.length) return;
-
-    const nextPreviews = [...previews];
-    [nextPreviews[index], nextPreviews[nextIndex]] = [nextPreviews[nextIndex], nextPreviews[index]];
-    setSyncedPreviews(nextPreviews);
-  };
-
   const removeExistingUrl = (index: number) => {
     setValue(urlsToValue(existingUrls.filter((_, urlIndex) => urlIndex !== index)));
   };
 
-  const moveExistingUrl = (index: number, direction: -1 | 1) => {
-    const nextIndex = index + direction;
-    if (nextIndex < 0 || nextIndex >= existingUrls.length) return;
+  const moveImage = (fromId: string | null, toId: string) => {
+    if (!multiple || !fromId || fromId === toId) return;
 
-    const nextUrls = [...existingUrls];
-    [nextUrls[index], nextUrls[nextIndex]] = [nextUrls[nextIndex], nextUrls[index]];
-    setValue(urlsToValue(nextUrls));
+    setOrder((currentOrder) => {
+      const currentEffectiveOrder = [
+        ...currentOrder.filter((imageId) => allIds.includes(imageId)),
+        ...allIds.filter((imageId) => !currentOrder.includes(imageId)),
+      ];
+      const fromIndex = currentEffectiveOrder.indexOf(fromId);
+      const toIndex = currentEffectiveOrder.indexOf(toId);
+      if (fromIndex === -1 || toIndex === -1) return currentOrder;
+
+      const nextOrder = [...currentEffectiveOrder];
+      const [moved] = nextOrder.splice(fromIndex, 1);
+      nextOrder.splice(toIndex, 0, moved);
+      return nextOrder;
+    });
+  };
+
+  const removeImage = (image: OrderedImage) => {
+    if (image.type === "preview") {
+      removePreview(image.previewIndex);
+    } else {
+      removeExistingUrl(image.existingIndex);
+    }
   };
 
   return (
@@ -123,6 +191,8 @@ export function DeferredImageField({
         />
         <p className="mt-2 text-xs text-muted-foreground">{helperText}</p>
       </div>
+
+      <input type="hidden" name={`${valueName}Order`} value={imageOrderValue} />
 
       {multiple ? (
         <Textarea
@@ -143,74 +213,42 @@ export function DeferredImageField({
         />
       )}
 
-      {previews.length > 0 || existingUrls.length > 0 ? (
+      {orderedImages.length > 0 ? (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-          {previews.map((preview, index) => (
-            <div key={preview.url} className="group relative aspect-square overflow-hidden rounded-md border bg-white">
-              <img src={preview.url} alt={preview.name} className="h-full w-full object-cover" />
-              <div className="absolute inset-x-1 top-1 flex justify-between gap-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
-                {multiple ? (
-                  <button
-                    type="button"
-                    onClick={() => movePreview(index, -1)}
-                    disabled={index === 0}
-                    className="rounded bg-black/65 px-2 py-1 text-xs text-white disabled:opacity-30"
-                  >
-                    ←
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => removePreview(index)}
-                  className="ml-auto rounded bg-black/65 px-2 py-1 text-xs text-white"
-                >
-                  Remove
-                </button>
-                {multiple ? (
-                  <button
-                    type="button"
-                    onClick={() => movePreview(index, 1)}
-                    disabled={index === previews.length - 1}
-                    className="rounded bg-black/65 px-2 py-1 text-xs text-white disabled:opacity-30"
-                  >
-                    →
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          ))}
-          {existingUrls.map((url, index) => (
-            <div key={url} className="group relative aspect-square overflow-hidden rounded-md border bg-white">
-              <img src={url} alt="Existing" className="h-full w-full object-cover" />
-              <div className="absolute inset-x-1 top-1 flex justify-between gap-1 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
-                {multiple ? (
-                  <button
-                    type="button"
-                    onClick={() => moveExistingUrl(index, -1)}
-                    disabled={index === 0}
-                    className="rounded bg-black/65 px-2 py-1 text-xs text-white disabled:opacity-30"
-                  >
-                    ←
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => removeExistingUrl(index)}
-                  className="ml-auto rounded bg-black/65 px-2 py-1 text-xs text-white"
-                >
-                  Remove
-                </button>
-                {multiple ? (
-                  <button
-                    type="button"
-                    onClick={() => moveExistingUrl(index, 1)}
-                    disabled={index === existingUrls.length - 1}
-                    className="rounded bg-black/65 px-2 py-1 text-xs text-white disabled:opacity-30"
-                  >
-                    →
-                  </button>
-                ) : null}
-              </div>
+          {orderedImages.map((image) => (
+            <div
+              key={image.id}
+              draggable={multiple}
+              onDragStart={(event) => {
+                setDraggedId(image.id);
+                event.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(event) => {
+                if (!multiple) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                moveImage(draggedId, image.id);
+                setDraggedId(null);
+              }}
+              onDragEnd={() => setDraggedId(null)}
+              className="group relative aspect-square cursor-grab overflow-hidden rounded-md border bg-white active:cursor-grabbing"
+            >
+              <img src={image.src} alt={image.alt} className="h-full w-full object-cover" />
+              {multiple ? (
+                <div className="absolute bottom-1 left-1 rounded bg-black/65 px-2 py-1 text-[10px] text-white">
+                  Drag
+                </div>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => removeImage(image)}
+                className="absolute right-1 top-1 rounded bg-black/65 px-2 py-1 text-xs text-white opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
+              >
+                Remove
+              </button>
             </div>
           ))}
         </div>

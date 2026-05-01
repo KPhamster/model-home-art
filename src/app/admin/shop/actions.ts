@@ -72,11 +72,32 @@ function collectionImageFiles(formData: FormData) {
     .filter((value): value is File => value instanceof File && value.size > 0 && value.type.startsWith("image/"));
 }
 
+function orderedCollectionImages(formData: FormData, existingUrls: string[], uploadedUrls: string[]) {
+  const rawOrder = stringValue(formData, "imageOrder");
+  if (!rawOrder) return [...existingUrls, ...uploadedUrls];
+
+  try {
+    const order = JSON.parse(rawOrder) as Array<{ type?: string; url?: string; index?: number }>;
+    const images = order
+      .map((item) => {
+        if (item.type === "existing" && item.url && existingUrls.includes(item.url)) return item.url;
+        if (item.type === "uploaded" && typeof item.index === "number") return uploadedUrls[item.index];
+        return null;
+      })
+      .filter((url): url is string => Boolean(url));
+
+    const missingImages = [...existingUrls, ...uploadedUrls].filter((url) => !images.includes(url));
+    return [...images, ...missingImages];
+  } catch {
+    return [...existingUrls, ...uploadedUrls];
+  }
+}
+
 async function collectionImageUploadData(formData: FormData) {
   const existingUrls = listValue(formData, "image");
   const files = collectionImageFiles(formData);
   const uploadedUrls = await uploadImages(files);
-  const images = [...existingUrls, ...uploadedUrls];
+  const images = orderedCollectionImages(formData, existingUrls, uploadedUrls);
 
   return {
     image: images.length ? images.join("\n") : null,
