@@ -96,9 +96,12 @@ export function ProductImageSizeFields({
   const applyImageDimensions = ({ width: pixelWidth, height: pixelHeight }: { width: number; height: number }) => {
     if (!pixelWidth || !pixelHeight) return;
 
-    setRatio(pixelWidth / pixelHeight);
-    setLength(String(roundedSize(pixelWidth)));
-    setWidth(String(roundedSize(pixelHeight)));
+    const longSide = Math.max(pixelWidth, pixelHeight);
+    const shortSide = Math.min(pixelWidth, pixelHeight);
+
+    setRatio(longSide / shortSide);
+    setLength(String(roundedSize(longSide)));
+    setWidth(String(roundedSize(shortSide)));
   };
 
   const handleFilesChange = (files: FileList | null) => {
