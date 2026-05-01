@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ImageUploadField } from "@/components/admin/image-upload-field";
+import { NameSlugFields } from "@/components/admin/name-slug-fields";
 import { ProductImageSizeFields } from "@/components/admin/product-image-size-fields";
 import { Textarea } from "@/components/ui/textarea";
 import prisma from "@/lib/db";
@@ -100,14 +101,12 @@ export default async function AdminShopPage() {
             </CardHeader>
             <CardContent>
               <form action={createProduct} className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="product-name">Name</Label>
-                  <Input id="product-name" name="name" placeholder="Coastal Abstract No. 1" required />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="product-slug">Slug</Label>
-                  <Input id="product-slug" name="slug" placeholder="coastal-abstract-no-1" />
-                </div>
+                <NameSlugFields
+                  nameId="product-name"
+                  slugId="product-slug"
+                  namePlaceholder="Coastal Abstract No. 1"
+                  slugPlaceholder="coastal-abstract-no-1"
+                />
                 <div className="grid gap-2 md:grid-cols-2">
                   <div className="grid gap-2">
                     <Label htmlFor="product-price">Price</Label>
@@ -173,14 +172,12 @@ export default async function AdminShopPage() {
             </CardHeader>
             <CardContent>
               <form action={createCollection} className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="collection-name">Name</Label>
-                  <Input id="collection-name" name="name" placeholder="Coastal Art" required />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="collection-slug">Slug</Label>
-                  <Input id="collection-slug" name="slug" placeholder="coastal-art" />
-                </div>
+                <NameSlugFields
+                  nameId="collection-name"
+                  slugId="collection-slug"
+                  namePlaceholder="Coastal Art"
+                  slugPlaceholder="coastal-art"
+                />
                 <div className="grid gap-2">
                   <Label htmlFor="collection-description">Description</Label>
                   <Textarea id="collection-description" name="description" rows={3} />
