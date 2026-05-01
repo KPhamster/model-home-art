@@ -1,11 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { ImageUploadField, type ImageDimensions } from "@/components/admin/image-upload-field";
+import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const SHRINK_FACTOR = 80;
+
+interface PreviewImage {
+  name: string;
+  url: string;
+}
 
 function roundedSize(pixels: number) {
   return Math.max(1, Math.round(pixels / SHRINK_FACTOR));
@@ -20,9 +25,35 @@ function parseFirstSize(value: string) {
   };
 }
 
+function parseUrls(value: string) {
+  return value
+    .split(/[\n,]/)
+    .map((url) => url.trim())
+    .filter(Boolean);
+}
+
 function numeric(value: string) {
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function readImageDimensions(file: File) {
+  return new Promise<{ width: number; height: number }>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve({ width: image.naturalWidth, height: image.naturalHeight });
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Could not read image dimensions."));
+    };
+
+    image.src = objectUrl;
+  });
 }
 
 interface ProductImageSizeFieldsProps {
@@ -43,6 +74,8 @@ export function ProductImageSizeFields({
   sizeDefaultValue = "",
 }: ProductImageSizeFieldsProps) {
   const initialSize = useMemo(() => parseFirstSize(sizeDefaultValue), [sizeDefaultValue]);
+  const [imageUrls, setImageUrls] = useState(imageDefaultValue);
+  const [previews, setPreviews] = useState<PreviewImage[]>([]);
   const [length, setLength] = useState(initialSize.length);
   const [width, setWidth] = useState(initialSize.width);
   const [ratio, setRatio] = useState(() => {
@@ -51,14 +84,42 @@ export function ProductImageSizeFields({
     return initialLength && initialWidth ? initialLength / initialWidth : null;
   });
 
+  useEffect(() => {
+    return () => {
+      previews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    };
+  }, [previews]);
+
+  const existingUrls = useMemo(() => parseUrls(imageUrls), [imageUrls]);
   const savedSize = length && width ? `${length}×${width}` : "";
 
-  const applyImageDimensions = ({ width: pixelWidth, height: pixelHeight }: ImageDimensions) => {
+  const applyImageDimensions = ({ width: pixelWidth, height: pixelHeight }: { width: number; height: number }) => {
     if (!pixelWidth || !pixelHeight) return;
 
     setRatio(pixelWidth / pixelHeight);
     setLength(String(roundedSize(pixelWidth)));
     setWidth(String(roundedSize(pixelHeight)));
+  };
+
+  const handleFilesChange = (files: FileList | null) => {
+    previews.forEach((preview) => URL.revokeObjectURL(preview.url));
+
+    const selectedFiles = Array.from(files ?? []).filter((file) => file.type.startsWith("image/"));
+    setPreviews(
+      selectedFiles.map((file) => ({
+        name: file.name,
+        url: URL.createObjectURL(file),
+      })),
+    );
+
+    const firstImage = selectedFiles[0];
+    if (!firstImage) return;
+
+    readImageDimensions(firstImage)
+      .then(applyImageDimensions)
+      .catch(() => {
+        // Product creation can still proceed; size auto-fill is best effort.
+      });
   };
 
   const handleLengthChange = (value: string) => {
@@ -77,14 +138,46 @@ export function ProductImageSizeFields({
 
   return (
     <div className="grid gap-4">
-      <ImageUploadField
-        id={imageId}
-        name={imageName}
-        label="Images"
-        defaultValue={imageDefaultValue}
-        placeholder="One URL per line, or upload files above"
-        onImageDimensions={applyImageDimensions}
-      />
+      <div className="grid gap-3">
+        <Label htmlFor={`${imageId}-files`}>Images</Label>
+        <div className="rounded-lg border bg-stone-50 p-3">
+          <Input
+            id={`${imageId}-files`}
+            name="imageFiles"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(event) => handleFilesChange(event.target.files)}
+          />
+          <p className="mt-2 text-xs text-muted-foreground">
+            Images stay local until you submit the form. They upload only when you create/save the product.
+          </p>
+        </div>
+
+        <Textarea
+          id={imageId}
+          name={imageName}
+          rows={4}
+          value={imageUrls}
+          onChange={(event) => setImageUrls(event.target.value)}
+          placeholder="Existing image URLs, one per line. New files are added on submit."
+        />
+
+        {previews.length > 0 || existingUrls.length > 0 ? (
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {previews.map((preview) => (
+              <div key={preview.url} className="aspect-square overflow-hidden rounded-md border bg-white">
+                <img src={preview.url} alt={preview.name} className="h-full w-full object-cover" />
+              </div>
+            ))}
+            {existingUrls.map((url) => (
+              <div key={url} className="aspect-square overflow-hidden rounded-md border bg-white">
+                <img src={url} alt="Existing product" className="h-full w-full object-cover" />
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
 
       <div className="grid gap-2">
         <Label>Size</Label>
@@ -116,7 +209,7 @@ export function ProductImageSizeFields({
           </div>
         </div>
         <p className="text-xs text-muted-foreground">
-          Uploading an image sets size from pixels ÷ {SHRINK_FACTOR}, rounded. Editing one side preserves the ratio.
+          Selecting an image sets size from pixels ÷ {SHRINK_FACTOR}, rounded. Editing one side preserves the ratio.
         </p>
       </div>
     </div>

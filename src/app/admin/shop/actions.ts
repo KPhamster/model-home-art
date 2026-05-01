@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { UTApi } from "uploadthing/server";
 import prisma from "@/lib/db";
 
 function stringValue(formData: FormData, key: string) {
@@ -35,6 +36,31 @@ function listValue(formData: FormData, key: string) {
     .split(/[\n,]/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function productImageFiles(formData: FormData) {
+  return formData
+    .getAll("imageFiles")
+    .filter((value): value is File => value instanceof File && value.size > 0 && value.type.startsWith("image/"));
+}
+
+async function productImageUrls(formData: FormData) {
+  const existingUrls = listValue(formData, "images");
+  const files = productImageFiles(formData);
+
+  if (!files.length) return existingUrls;
+
+  const utapi = new UTApi();
+  const uploads = await utapi.uploadFiles(files, { concurrency: 3 });
+  const uploadedUrls = uploads.map((upload) => {
+    if (upload.error) {
+      throw new Error(upload.error.message || "Image upload failed");
+    }
+
+    return upload.data.ufsUrl;
+  });
+
+  return [...existingUrls, ...uploadedUrls];
 }
 
 function slugify(value: string) {
@@ -107,6 +133,7 @@ export async function createProduct(formData: FormData) {
 
   const slug = stringValue(formData, "slug") || slugify(name);
   const collectionId = stringValue(formData, "collectionId");
+  const images = await productImageUrls(formData);
 
   await prisma.product.create({
     data: {
@@ -115,7 +142,7 @@ export async function createProduct(formData: FormData) {
       description: optionalString(formData, "description"),
       price: centsValue(formData, "price"),
       comparePrice: stringValue(formData, "comparePrice") ? centsValue(formData, "comparePrice") : null,
-      images: listValue(formData, "images"),
+      images,
       sizes: listValue(formData, "sizes"),
       materials: optionalString(formData, "materials"),
       inStock: boolValue(formData, "inStock"),
@@ -134,6 +161,7 @@ export async function updateProduct(id: string, formData: FormData) {
   if (!name) return;
 
   const collectionId = stringValue(formData, "collectionId");
+  const images = await productImageUrls(formData);
 
   await prisma.product.update({
     where: { id },
@@ -143,7 +171,7 @@ export async function updateProduct(id: string, formData: FormData) {
       description: optionalString(formData, "description"),
       price: centsValue(formData, "price"),
       comparePrice: stringValue(formData, "comparePrice") ? centsValue(formData, "comparePrice") : null,
-      images: listValue(formData, "images"),
+      images,
       sizes: listValue(formData, "sizes"),
       materials: optionalString(formData, "materials"),
       inStock: boolValue(formData, "inStock"),
