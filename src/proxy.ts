@@ -30,9 +30,20 @@ export function proxy(request: NextRequest) {
 
   const authHeader = request.headers.get("authorization");
   const expected = `Basic ${btoa(`${username}:${password}`)}`;
+  const adminSession = request.cookies.get("model_home_admin_auth")?.value;
 
-  if (authHeader === expected) {
-    return NextResponse.next();
+  if (authHeader === expected || adminSession === expected) {
+    const response = NextResponse.next();
+    if (authHeader === expected && adminSession !== expected) {
+      response.cookies.set("model_home_admin_auth", expected, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/admin",
+        maxAge: 60 * 60 * 8,
+      });
+    }
+    return response;
   }
 
   return new NextResponse("Authentication required.", {
