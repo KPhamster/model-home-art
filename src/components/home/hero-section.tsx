@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Shield, Truck } from "lucide-react";
-import heroImage from "../../../assets/home_top_image.jpg";
+import { cn } from "@/lib/utils";
+import { HeroFrameSwap } from "./hero-frame-swap";
+import styles from "./hero-section.module.css";
 
 const trustChips = [
   { icon: CheckCircle, label: "Budget-friendly options" },
@@ -12,70 +13,72 @@ const trustChips = [
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-stone-100 to-background">
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-5 pointer-events-none" />
-      
-      <div className="container-wide py-16 md:py-24 lg:py-32">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Content */}
-          <div className="text-center lg:text-left">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-semibold tracking-tight text-foreground mb-6">
-              Custom framing that looks high-end —{" "}
-              <span className="text-primary">without the high-end price.</span>
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto lg:mx-0">
-              We frame just about anything: art, photos, jerseys, diplomas, mirrors, and memorabilia. 
-              Visit our Orange County, CA shop or get a fast quote online. We deliver, ship, and install nationwide in the United States.
-            </p>
-            
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
-              <Button asChild size="lg" className="text-base">
-                <Link href="/quote">Get a Fast Quote</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-base">
-                <Link href="/shop">Shop Framed Art</Link>
-              </Button>
-            </div>
-            
-            {/* Tertiary link */}
-            <div className="mb-8">
-              <a 
-                href="#visit-us" 
-                className="text-primary hover:text-primary/80 font-medium underline-offset-4 hover:underline"
+    <section className="relative isolate overflow-hidden bg-[#151311] text-stone-50">
+      {/* Soft light behind the artwork, so the lit wall carries on past the picture's edge. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_90%_55%_at_50%_38%,rgba(96,88,80,0.34),transparent_72%)] lg:bg-[radial-gradient(ellipse_48%_78%_at_73%_50%,rgba(96,88,80,0.34),transparent_72%)]"
+      />
+
+      <div className={cn(styles.grid, "container-wide pt-6 pb-10 sm:pt-10 lg:py-6")}>
+        <h1
+          className={cn(
+            styles.title,
+            // On desktop the size follows the column width, so each half of the headline stays on two lines.
+            "text-center font-heading text-[2rem] font-semibold leading-[1.12] tracking-tight text-stone-50 sm:text-5xl lg:text-left lg:text-[clamp(2.6rem,3.9vw,3.75rem)]",
+          )}
+        >
+          Custom framing that looks <span className="whitespace-nowrap">high-end —</span>{" "}
+          <span className="italic text-[#e3cdb2] lg:block">
+            without the <span className="whitespace-nowrap">high-end</span> price.
+          </span>
+        </h1>
+
+        <HeroFrameSwap className={styles.art} />
+
+        <p
+          className={cn(
+            styles.copy,
+            "mx-auto mt-7 max-w-2xl text-center text-lg text-stone-300 md:text-xl lg:mx-0 lg:mt-6 lg:text-left lg:text-lg 2xl:text-xl",
+          )}
+        >
+          We frame just about anything: art, photos, jerseys, diplomas, mirrors, and memorabilia.
+          Visit our Orange County, CA shop or get a fast quote online. We deliver, ship, and install nationwide in the United States.
+        </p>
+
+        <div className={cn(styles.cta, "grid grid-cols-2 gap-3 sm:flex sm:justify-center sm:gap-4 lg:mt-8 lg:justify-start")}>
+          <Button asChild size="lg" className="h-12 px-3 text-[0.95rem] sm:px-7 sm:text-base">
+            <Link href="/quote">Get a Fast Quote</Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="lg"
+            className="h-12 border-white/25 bg-transparent px-3 text-[0.95rem] text-stone-50 hover:bg-white/10 hover:text-white sm:px-7 sm:text-base"
+          >
+            <Link href="/shop">Shop Framed Art</Link>
+          </Button>
+        </div>
+
+        <div className={cn(styles.extra, "mt-7 text-center lg:text-left")}>
+          <a
+            href="#visit-us"
+            className="font-medium text-stone-200 underline-offset-4 hover:text-white hover:underline"
+          >
+            Visit the Store →
+          </a>
+
+          <ul className="mt-7 flex flex-wrap justify-center gap-2.5 lg:justify-start">
+            {trustChips.map((chip) => (
+              <li
+                key={chip.label}
+                className="flex items-center rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-sm text-stone-200"
               >
-                Visit the Store →
-              </a>
-            </div>
-
-            {/* Trust chips */}
-            <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-              {trustChips.map((chip) => (
-                <Badge
-                  key={chip.label}
-                  variant="secondary"
-                  className="px-4 py-2 text-sm font-normal"
-                >
-                  <chip.icon className="h-4 w-4 mr-2 text-primary" />
-                  {chip.label}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Hero Image */}
-          <div className="relative">
-            <div className="aspect-[4/3] rounded-2xl bg-stone-200 border border-border overflow-hidden shadow-2xl">
-              <img
-                src={heroImage.src}
-                alt="Framed art in a warm, lived-in home setting"
-                className="h-full w-full object-cover"
-                loading="eager"
-              />
-            </div>
-            
-          </div>
+                <chip.icon className="mr-2 h-4 w-4 text-[#e3cdb2]" aria-hidden="true" />
+                {chip.label}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

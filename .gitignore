@@ -42,3 +42,6 @@ README.md
 next-env.d.ts
 
 /src/generated/prisma
+
+# source stills and drafts for generated artwork (large; see scripts/build-hero-frames.mjs)
+/design/
