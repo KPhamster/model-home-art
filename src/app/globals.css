@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Color palette - Neutral with Teal accent */
+  /* Color palette - warm neutrals with a copper accent taken from the logo */
   --color-background: #FAFAF9;
   --color-foreground: #1C1917;
   
@@ -14,8 +14,12 @@
   --color-popover: #FFFFFF;
   --color-popover-foreground: #1C1917;
   
-  --color-primary: #0D9488;
+  /* The logo's copper, deepened so white text on it (and it as text on the page) passes 4.5:1. */
+  --color-primary: #8F5A3D;
   --color-primary-foreground: #FFFFFF;
+
+  /* The logo's own copper. Too light for text on the page; use it for accents on dark backgrounds. */
+  --color-brand: #AE8068;
   
   --color-secondary: #F5F5F4;
   --color-secondary-foreground: #1C1917;
@@ -31,26 +35,26 @@
   
   --color-border: #E7E5E4;
   --color-input: #E7E5E4;
-  --color-ring: #0D9488;
+  --color-ring: #8F5A3D;
   
   /* Chart colors */
-  --color-chart-1: #0D9488;
-  --color-chart-2: #14B8A6;
-  --color-chart-3: #2DD4BF;
-  --color-chart-4: #5EEAD4;
-  --color-chart-5: #99F6E4;
+  --color-chart-1: #8F5A3D;
+  --color-chart-2: #AE8068;
+  --color-chart-3: #C49F8A;
+  --color-chart-4: #D9BFAF;
+  --color-chart-5: #EBDCD3;
   
   --radius: 0.625rem;
   
   /* Sidebar colors */
   --color-sidebar: #FAFAF9;
   --color-sidebar-foreground: #1C1917;
-  --color-sidebar-primary: #0D9488;
+  --color-sidebar-primary: #8F5A3D;
   --color-sidebar-primary-foreground: #FFFFFF;
   --color-sidebar-accent: #F5F5F4;
   --color-sidebar-accent-foreground: #1C1917;
   --color-sidebar-border: #E7E5E4;
-  --color-sidebar-ring: #0D9488;
+  --color-sidebar-ring: #8F5A3D;
 
   /* Font families */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;

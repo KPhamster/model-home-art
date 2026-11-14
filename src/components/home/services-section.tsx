@@ -36,8 +36,8 @@ export function ServicesSection() {
                 key={service.id}
                 className="group p-6 rounded-xl bg-stone-800/50 hover:bg-stone-800 border border-stone-700 transition-all"
               >
-                <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center mb-4">
-                  <Icon className="w-6 h-6 text-primary" />
+                <div className="w-12 h-12 rounded-lg bg-brand/20 flex items-center justify-center mb-4">
+                  <Icon className="w-6 h-6 text-brand" />
                 </div>
                 <h3 className="font-semibold mb-2">{service.name}</h3>
                 <p className="text-sm text-stone-400">{service.description}</p>

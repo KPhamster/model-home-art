@@ -40,23 +40,23 @@ export function Footer() {
             </p>
             <div className="space-y-3 text-sm">
               <div className="flex items-start gap-3">
-                <MapPin className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                <MapPin className="h-4 w-4 mt-0.5 text-brand flex-shrink-0" />
                 <span>{businessConfig.address.full}</span>
               </div>
               <div className="flex items-center gap-3">
-                <Phone className="h-4 w-4 text-primary flex-shrink-0" />
+                <Phone className="h-4 w-4 text-brand flex-shrink-0" />
                 <a href={`tel:${businessConfig.phone}`} className="hover:text-white transition-colors">
                   {businessConfig.phone}
                 </a>
               </div>
               <div className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-primary flex-shrink-0" />
+                <Mail className="h-4 w-4 text-brand flex-shrink-0" />
                 <a href={`mailto:${businessConfig.email}`} className="hover:text-white transition-colors">
                   {businessConfig.email}
                 </a>
               </div>
               <div className="flex items-start gap-3">
-                <Clock className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+                <Clock className="h-4 w-4 mt-0.5 text-brand flex-shrink-0" />
                 <span>{businessConfig.hours.display}</span>
               </div>
             </div>
