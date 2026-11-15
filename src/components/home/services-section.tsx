@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { Frame, Image, MessageCircle, Package, Palette, Shield, Truck, Wrench } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { services } from "@/lib/config";
-import {
-  Frame, Package, Image, Shield, Wrench, MessageCircle, Truck, Palette,
-} from "lucide-react";
+import { SectionHeading } from "./section-heading";
+
+const lede = "Everything you need to frame, display, and preserve your most meaningful pieces.";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   frame: Frame,
@@ -17,42 +19,38 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export function ServicesSection() {
   return (
-    <section className="py-16 lg:py-20 bg-stone-900 text-white">
+    // Less padding on top: the section above already fades into this one's background.
+    <section className="bg-stone-900 pb-20 pt-10 text-stone-50 lg:pb-28 lg:pt-14">
       <div className="container-wide">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-4">
-            Our Services
-          </h2>
-          <p className="text-lg text-stone-400 max-w-2xl mx-auto">
-            Everything you need to frame, display, and preserve your most meaningful pieces.
-          </p>
-        </div>
+        <SectionHeading tone="dark" title="Our Services" lede={lede} />
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
+        <ul className="mt-12 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:gap-5">
           {services.map((service) => {
             const Icon = iconMap[service.icon] || Frame;
             return (
-              <div
+              <li
                 key={service.id}
-                className="group p-6 rounded-xl bg-stone-800/50 hover:bg-stone-800 border border-stone-700 transition-all"
+                className="reveal rounded-xl border border-white/10 bg-white/[0.03] p-5 transition-colors duration-300 hover:border-white/20 hover:bg-white/[0.06] sm:p-6"
               >
-                <div className="w-12 h-12 rounded-lg bg-brand/20 flex items-center justify-center mb-4">
-                  <Icon className="w-6 h-6 text-brand" />
-                </div>
-                <h3 className="font-semibold mb-2">{service.name}</h3>
-                <p className="text-sm text-stone-400">{service.description}</p>
-              </div>
+                <span className="mb-5 flex size-11 items-center justify-center rounded-full border border-brand/50 text-brand">
+                  <Icon className="size-5" aria-hidden="true" />
+                </span>
+                <h3 className="font-heading text-lg font-semibold leading-snug">{service.name}</h3>
+                <p className="mt-2 text-sm text-stone-400">{service.description}</p>
+              </li>
             );
           })}
-        </div>
+        </ul>
 
-        <div className="text-center mt-10">
-          <Link
-            href="/custom-framing"
-            className="inline-block px-6 py-3 bg-white text-stone-900 font-medium rounded-lg hover:bg-stone-100 transition-colors"
+        <div className="reveal mt-12 text-center">
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="h-12 border-white/25 bg-transparent px-7 text-base text-stone-50 hover:bg-white/10 hover:text-white"
           >
-            Learn More About Our Services
-          </Link>
+            <Link href="/custom-framing">Learn More About Our Services</Link>
+          </Button>
         </div>
       </div>
     </section>

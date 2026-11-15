@@ -1,7 +1,11 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Photo } from "@/components/ui/photo";
+import { SectionHeading } from "./section-heading";
+
+const lede =
+  "We work with offices, interior designers, hotels, medical facilities, and more. Whether you need 5 frames or 500, we deliver consistent quality on time and on budget.";
 
 const benefits = [
   "Volume pricing for bulk orders",
@@ -11,46 +15,46 @@ const benefits = [
 
 export function BusinessSection() {
   return (
-    <section className="py-16 lg:py-20 bg-stone-50">
-      <div className="container-wide">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Content */}
-          <div>
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-6">
-              Framing for businesses —{" "}
-              <span className="text-primary">reliable, consistent, affordable.</span>
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              We work with offices, interior designers, hotels, medical facilities, and more. 
-              Whether you need 5 frames or 500, we deliver consistent quality on time and on budget.
-            </p>
-            
-            <ul className="space-y-3 mb-8">
-              {benefits.map((benefit) => (
-                <li key={benefit} className="flex items-center gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Check className="w-4 h-4 text-primary" />
-                  </div>
-                  <span>{benefit}</span>
-                </li>
-              ))}
-            </ul>
+    <section className="bg-sand py-20 lg:py-28">
+      <div className="container-wide grid items-center gap-14 lg:grid-cols-2 lg:gap-20">
+        <div>
+          <SectionHeading
+            align="left"
+            title={
+              <>
+                Framing for businesses —{" "}
+                <span className="italic text-primary">reliable, consistent, affordable.</span>
+              </>
+            }
+            lede={lede}
+          />
 
-            <Button asChild size="lg">
+          <ul className="reveal mt-8 divide-y divide-primary/15 border-y border-primary/15">
+            {benefits.map((benefit) => (
+              <li key={benefit} className="flex items-center gap-3 py-3.5">
+                <Check className="size-4 shrink-0 text-primary" aria-hidden="true" />
+                <span>{benefit}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="reveal mt-8">
+            <Button asChild size="lg" className="h-12 px-7 text-base">
               <Link href="/business#request">Request Business Pricing</Link>
             </Button>
           </div>
+        </div>
 
-          {/* Image */}
-          <div className="relative">
-            <div className="aspect-[4/3] rounded-2xl bg-stone-200 border border-border overflow-hidden">
-              <Photo
-                name="business"
-                alt="Business installation with framed artwork"
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                className="h-full w-full object-cover"
-              />
-            </div>
+        {/* The thin outline set off from the photo is a nod to a mat around a picture. */}
+        <div className="reveal relative mx-auto w-full max-w-xl lg:max-w-none">
+          <span aria-hidden="true" className="absolute -inset-3 rounded-[1.4rem] border border-primary/25 sm:-inset-4" />
+          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-stone-200">
+            <Photo
+              name="business"
+              alt="Business installation with framed artwork"
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="h-full w-full object-cover"
+            />
           </div>
         </div>
       </div>
