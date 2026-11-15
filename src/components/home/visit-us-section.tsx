@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { businessConfig } from "@/lib/config";
 import { MapPin, Clock, Phone, ExternalLink } from "lucide-react";
-import visitShopImage from "../../../assets/visit_our_shop_image.jpg";
+import { Photo } from "@/components/ui/photo";
 
 export function VisitUsSection() {
   return (
@@ -12,11 +12,11 @@ export function VisitUsSection() {
         <div className="grid lg:grid-cols-2 gap-6 lg:gap-0 items-stretch">
           {/* Image Side */}
           <div className="relative h-[300px] sm:h-[400px] lg:h-auto lg:min-h-[600px] rounded-2xl lg:rounded-r-none overflow-hidden">
-            <img
-              src={visitShopImage.src}
+            <Photo
+              name="visit-our-shop"
               alt="Inside the Model Home Art shop with framed art displays"
+              sizes="(min-width: 1024px) 50vw, 100vw"
               className="absolute inset-0 h-full w-full object-cover"
-              loading="lazy"
             />
             {/* Subtle gradient overlay for depth */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-black/10" />

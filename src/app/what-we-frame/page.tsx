@@ -5,25 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { extendedFramingCategories } from "@/lib/config";
 import { Search } from "lucide-react";
-import jerseyImage from "../../../assets/jersey_image.png";
-import mirrorImage from "../../../assets/mirror_image.jpeg";
-import diplomaImage from "../../../assets/diploma_image.jpeg";
-import fineArtImage from "../../../assets/fine_art_image.jpg";
-import posterImage from "../../../assets/poster_image.jpeg";
-import photoImage from "../../../assets/photo_image.png";
-import canvasStretchingImage from "../../../assets/canvas_stretching_image.png";
-import needleworkImage from "../../../assets/needlework_image.png";
-import memorabiliaImage from "../../../assets/memorabilia_image.png";
-import medalsImage from "../../../assets/medals_image.jpeg";
-import albumImage from "../../../assets/album_image.jpeg";
-import babyKeepsakeImage from "../../../assets/babykeepsake_image.jpeg";
-import weddingImage from "../../../assets/wedding_image.jpeg";
-import militaryImage from "../../../assets/military_image.jpeg";
-import sportsImage from "../../../assets/sports_image.jpeg";
-import documentImage from "../../../assets/document_image.jpeg";
-import mapImage from "../../../assets/map_image.jpeg";
-import flagsImage from "../../../assets/flags_image.jpeg";
-import callToActionImage from "../../../assets/calltoaction_image.jpg";
+import { Photo } from "@/components/ui/photo";
+import type { PhotoName } from "@/lib/photos";
 
 export const metadata: Metadata = {
   title: "What We Frame",
@@ -73,25 +56,25 @@ const additionalItems = [
   "Custom puzzles",
 ];
 
-const cardImages: Partial<Record<string, { src: string; alt: string }>> = {
-  jerseys: { src: jerseyImage.src, alt: "Framed jersey display" },
-  mirrors: { src: mirrorImage.src, alt: "Custom framed mirror" },
-  diplomas: { src: diplomaImage.src, alt: "Framed diplomas and certificates" },
-  "fine-art": { src: fineArtImage.src, alt: "Framed fine art" },
-  posters: { src: posterImage.src, alt: "Framed posters and prints" },
-  photos: { src: photoImage.src, alt: "Framed photos" },
-  canvas: { src: canvasStretchingImage.src, alt: "Stretched canvas" },
-  needlework: { src: needleworkImage.src, alt: "Framed needlework and textiles" },
-  shadowboxes: { src: memorabiliaImage.src, alt: "Shadowbox memorabilia display" },
-  medals: { src: medalsImage.src, alt: "Framed medals and awards" },
-  vinyl: { src: albumImage.src, alt: "Framed vinyl record and album art" },
-  baby: { src: babyKeepsakeImage.src, alt: "Framed baby keepsakes" },
-  wedding: { src: weddingImage.src, alt: "Framed wedding items" },
-  military: { src: militaryImage.src, alt: "Framed military memorabilia" },
-  sports: { src: sportsImage.src, alt: "Framed sports equipment" },
-  documents: { src: documentImage.src, alt: "Framed important documents" },
-  maps: { src: mapImage.src, alt: "Framed maps and blueprints" },
-  flags: { src: flagsImage.src, alt: "Framed flags and banners" },
+const cardImages: Partial<Record<string, { name: PhotoName; alt: string }>> = {
+  jerseys: { name: "jersey", alt: "Framed jersey display" },
+  mirrors: { name: "mirror", alt: "Custom framed mirror" },
+  diplomas: { name: "diploma", alt: "Framed diplomas and certificates" },
+  "fine-art": { name: "fine-art", alt: "Framed fine art" },
+  posters: { name: "poster", alt: "Framed posters and prints" },
+  photos: { name: "photo", alt: "Framed photos" },
+  canvas: { name: "canvas-stretching", alt: "Stretched canvas" },
+  needlework: { name: "needlework", alt: "Framed needlework and textiles" },
+  shadowboxes: { name: "memorabilia", alt: "Shadowbox memorabilia display" },
+  medals: { name: "medals", alt: "Framed medals and awards" },
+  vinyl: { name: "album", alt: "Framed vinyl record and album art" },
+  baby: { name: "baby-keepsake", alt: "Framed baby keepsakes" },
+  wedding: { name: "wedding", alt: "Framed wedding items" },
+  military: { name: "military", alt: "Framed military memorabilia" },
+  sports: { name: "sports", alt: "Framed sports equipment" },
+  documents: { name: "document", alt: "Framed important documents" },
+  maps: { name: "map", alt: "Framed maps and blueprints" },
+  flags: { name: "flags", alt: "Framed flags and banners" },
 };
 
 const cardDescriptions: Partial<Record<string, string>> = {
@@ -169,11 +152,11 @@ export default function WhatWeFramePage() {
                       }`}
                     >
                       {cardImage ? (
-                        <img
-                          src={cardImage.src}
+                        <Photo
+                          name={cardImage.name}
                           alt={cardImage.alt}
+                          sizes="(min-width: 1400px) 440px, (min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                           className={isJersey ? "h-full w-full object-contain" : "h-full w-full object-cover"}
-                          loading="lazy"
                         />
                       ) : (
                         <span className="text-sm">[{category.name} Image]</span>
@@ -231,11 +214,11 @@ export default function WhatWeFramePage() {
       {/* CTA */}
       <section className="relative py-16 lg:py-24 text-white overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            src={callToActionImage.src}
+          <Photo
+            name="call-to-action"
             alt="Custom framed art in a warm home setting"
+            sizes="100vw"
             className="h-full w-full object-cover"
-            loading="lazy"
           />
           <div className="absolute inset-0 bg-black/50" />
         </div>
