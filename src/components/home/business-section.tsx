@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
-import businessImage from "../../../assets/business_image.png";
+import { Photo } from "@/components/ui/photo";
 
 const benefits = [
   "Volume pricing for bulk orders",
@@ -44,11 +44,11 @@ export function BusinessSection() {
           {/* Image */}
           <div className="relative">
             <div className="aspect-[4/3] rounded-2xl bg-stone-200 border border-border overflow-hidden">
-              <img
-                src={businessImage.src}
+              <Photo
+                name="business"
                 alt="Business installation with framed artwork"
+                sizes="(min-width: 1024px) 50vw, 100vw"
                 className="h-full w-full object-cover"
-                loading="lazy"
               />
             </div>
           </div>

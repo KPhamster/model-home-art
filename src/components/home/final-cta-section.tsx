@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import callToActionImage from "../../../assets/calltoaction_image.jpg";
+import { Photo } from "@/components/ui/photo";
 
 export function FinalCTASection() {
   return (
     <section className="relative py-16 lg:py-24 text-white overflow-hidden">
       <div className="absolute inset-0">
-        <img
-          src={callToActionImage.src}
+        <Photo
+          name="call-to-action"
           alt="Custom framed art in a warm home setting"
+          sizes="100vw"
           className="h-full w-full object-cover"
-          loading="lazy"
         />
         <div className="absolute inset-0 bg-black/50" />
       </div>

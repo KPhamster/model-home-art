@@ -9,6 +9,7 @@
     "lint": "eslint",
     "hero:frames": "node scripts/build-hero-frames.mjs",
     "how-it-works:frames": "node scripts/build-how-it-works-frames.mjs",
+    "photos": "node scripts/build-photos.mjs",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
