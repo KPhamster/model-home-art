@@ -18,14 +18,16 @@
 .cta { grid-area: cta; }
 .extra { grid-area: extra; }
 
-/* The artwork is a square picture whose outer edge is bare wall. It is drawn wider than
-   the screen on phones so the frame itself fills most of the width. */
+/* The artwork is a square picture whose outer edge is bare wall. It is drawn a little wider
+   than the screen on phones so the frame itself fills most of the width, but no wider:
+   with a phone browser's bars taking their share, the headline, the artwork and the two
+   buttons have about 580 px to share. */
 .art {
   grid-area: art;
-  width: 118vw;
-  margin-left: calc(50% - 59vw);
+  width: 104vw;
+  margin-left: calc(50% - 52vw);
   /* Pulled up under the headline; the top of the picture is bare wall that fades out. */
-  margin-block: -5.5vw 0;
+  margin-block: -6vw 0;
 }
 
 @media (min-width: 640px) {
