@@ -1,24 +1,11 @@
 import Link from "next/link";
-import { framingCategories } from "@/lib/config";
-import { 
-  Shirt, Square, ScrollText, Palette, Image, Camera, 
-  Frame, Scissors, Box, Plus 
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import { Photo } from "@/components/ui/photo";
+import { framingCategories } from "@/lib/config";
 import type { PhotoName } from "@/lib/photos";
+import { SectionHeading } from "./section-heading";
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  shirt: Shirt,
-  square: Square,
-  scroll: ScrollText,
-  palette: Palette,
-  image: Image,
-  camera: Camera,
-  frame: Frame,
-  scissors: Scissors,
-  box: Box,
-  plus: Plus,
-};
+const lede = "From jerseys to diplomas, fine art to family photos — we frame it all with care and precision.";
 
 const cardImages: Partial<Record<string, { name: PhotoName; alt: string }>> = {
   jerseys: { name: "jersey", alt: "Framed jersey" },
@@ -33,71 +20,61 @@ const cardImages: Partial<Record<string, { name: PhotoName; alt: string }>> = {
   medals: { name: "medals", alt: "Framed medals and awards" },
 };
 
+/** How wide a tile is drawn, so the browser can pick the smallest photo that is sharp. */
+const tileSizes =
+  "(min-width: 1400px) 260px, (min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw";
+
 export function WhatWeFrameSection() {
   return (
-    <section className="py-16 lg:py-20 bg-stone-50">
+    <section className="bg-sand py-20 lg:py-28">
       <div className="container-wide">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-4">
-            What We Frame
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            From jerseys to diplomas, fine art to family photos — we frame it all with care and precision.
-          </p>
-        </div>
+        <SectionHeading title="What We Frame" lede={lede} />
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {/* Every photo is two wide by three tall, and so are the tiles: nothing is cropped. */}
+        <ul className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
           {framingCategories.map((category) => {
-            const Icon = iconMap[category.icon] || Frame;
             const cardImage = cardImages[category.id];
-            const isJersey = category.id === "jerseys";
             return (
-              <Link
-                key={category.id}
-                href={`/what-we-frame#${category.id}`}
-                className={`group flex flex-col min-h-[300px] sm:min-h-[330px] lg:min-h-[360px] rounded-xl border border-border hover:border-primary/50 hover:shadow-md transition-all bg-white ${
-                  cardImage ? "overflow-hidden" : "items-center justify-center p-6"
-                }`}
-              >
-                {cardImage ? (
-                  <>
-                    <div className="w-full min-h-[300px] sm:min-h-[330px] lg:min-h-[360px] bg-stone-100 overflow-hidden">
+              <li key={category.id} className="reveal">
+                <Link
+                  href={`/what-we-frame#${category.id}`}
+                  className="group relative block aspect-[2/3] overflow-hidden rounded-xl bg-stone-200 shadow-sm transition-shadow duration-300 hover:shadow-lg"
+                >
+                  {cardImage ? (
+                    <>
                       <Photo
                         name={cardImage.name}
                         alt={cardImage.alt}
-                        sizes="(min-width: 1400px) 260px, (min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
-                        className={isJersey ? "h-full w-full object-contain" : "h-full w-full object-cover"}
+                        sizes={tileSizes}
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                       />
-                    </div>
-                    <div className="flex flex-1 items-center justify-center p-4">
-                      <span className="text-sm font-medium text-center text-foreground group-hover:text-primary transition-colors">
+                      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3.5 pb-3.5 pt-16 sm:px-4 sm:pb-4">
+                        <span className="font-heading text-base font-semibold leading-snug text-white sm:text-lg">
+                          {category.name}
+                        </span>
+                      </span>
+                    </>
+                  ) : (
+                    <span className="flex h-full flex-col items-center justify-center gap-4 bg-[#151311] p-4 text-center">
+                      <span className="flex size-12 items-center justify-center rounded-full border border-brand/60 text-brand transition-colors duration-300 group-hover:bg-brand group-hover:text-[#151311]">
+                        <Plus className="size-5" aria-hidden="true" />
+                      </span>
+                      <span className="font-heading text-base font-semibold leading-snug text-stone-50 sm:text-lg">
                         {category.name}
                       </span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors overflow-hidden">
-                      <Icon className="w-7 h-7 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium text-center text-foreground group-hover:text-primary transition-colors">
-                      {category.name}
                     </span>
-                  </div>
-                )}
-              </Link>
+                  )}
+                </Link>
+              </li>
             );
           })}
-        </div>
+        </ul>
 
-        <div className="text-center mt-8">
-          <Link
-            href="/what-we-frame"
-            className="text-primary font-medium hover:underline underline-offset-4"
-          >
+        <p className="reveal mt-10 text-center">
+          <Link href="/what-we-frame" className="font-medium text-primary underline-offset-4 hover:underline">
             See all categories →
           </Link>
-        </div>
+        </p>
       </div>
     </section>
   );

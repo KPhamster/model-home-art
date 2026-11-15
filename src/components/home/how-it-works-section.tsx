@@ -243,6 +243,8 @@ export function HowItWorksSection() {
       <div className={styles.inner}>
         <div className={cn(styles.grid, "container-wide")}>
           <div className={cn(styles.head, "text-center lg:text-left")}>
+            {/* The same short copper rule the other sections' headings open with. */}
+            <span aria-hidden="true" className="mx-auto mb-5 block h-0.5 w-10 rounded-full bg-brand lg:mx-0" />
             <h2 id="how-it-works-title" className="font-heading text-3xl font-semibold md:text-4xl">
               How It Works
             </h2>

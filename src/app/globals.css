@@ -20,6 +20,9 @@
 
   /* The logo's own copper. Too light for text on the page; use it for accents on dark backgrounds. */
   --color-brand: #AE8068;
+
+  /* A warm off-white, for every other light section so neighbouring sections do not blur together. */
+  --color-sand: #F4EEE7;
   
   --color-secondary: #F5F5F4;
   --color-secondary-foreground: #1C1917;
@@ -203,6 +206,30 @@ img[data-loading="true"] {
 
 .animate-slide-up {
   animation: slide-up 0.6s ease-out forwards;
+}
+
+/* Content eases up into place as it scrolls into view. This is CSS only and never holds the
+   page: it scrolls normally throughout. Browsers without scroll-driven animations, and
+   visitors who ask for reduced motion, simply see the content. */
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 24%;
+    }
+  }
 }
 
 /* Staggered animation delays */
