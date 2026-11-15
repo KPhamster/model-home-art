@@ -1,0 +1,125 @@
+// Exports the frames for the homepage "How It Works" scroll sequence.
+//
+// Source: one square clip of a framed picture that turns and separates into its
+// five layers (moulding, glazing, mat, artwork, backing) on a flat dark background.
+// It lives outside git, by default at
+//   design/hero-clips/final-1080p/clip.mp4
+//
+// Output:
+//   public/how-it-works/frames/NNN-<width>.webp      one still per step of the sequence
+//   src/components/home/how-it-works-frames.ts       what the section needs to know about them
+//
+// Why stills and not the video itself: the page moves through the clip as the visitor
+// scrolls, forwards and backwards. Seeking a video like that is slow and unreliable on
+// phones; drawing ready-made stills to a canvas is instant in both directions.
+//
+// Run with:  npm run how-it-works:frames [-- path/to/clip.mp4]
+// Needs ffmpeg on the PATH (brew install ffmpeg). Uses sharp, which is installed with Next.js.
+
+import { spawnSync } from "node:child_process";
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import sharp from "sharp";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const source = path.resolve(root, process.argv[2] ?? "design/hero-clips/final-1080p/clip.mp4");
+const outDir = path.join(root, "public/how-it-works/frames");
+const manifestPath = path.join(root, "src/components/home/how-it-works-frames.ts");
+
+const EVERY = 2; // keep every 2nd frame of the clip: smooth enough when scrolled, half the download
+const WIDTHS = [640, 1080]; // export widths; any wider than the clip itself are skipped
+const WEBP = { quality: 78, effort: 5 };
+
+const ffmpeg = spawnSync("ffmpeg", ["-version"]);
+if (ffmpeg.error || ffmpeg.status !== 0) {
+  console.error("ffmpeg was not found. Install it (brew install ffmpeg) and run this again.");
+  process.exit(1);
+}
+
+// 1. Every frame of the clip as a PNG, in a temporary folder.
+const tmp = await mkdtemp(path.join(os.tmpdir(), "how-it-works-"));
+try {
+  const extract = spawnSync(
+    "ffmpeg",
+    ["-v", "error", "-y", "-i", source, "-fps_mode", "passthrough", path.join(tmp, "%04d.png")],
+    { stdio: "inherit" },
+  );
+  if (extract.status !== 0) throw new Error(`ffmpeg could not read ${source}`);
+
+  const all = (await readdir(tmp)).filter((f) => f.endsWith(".png")).sort();
+  if (all.length < 2) throw new Error(`${source}: no frames found`);
+
+  // 2. Keep every EVERY-th frame, and always the last one, so the sequence ends fully apart.
+  const picked = all.filter((_, i) => i % EVERY === 0);
+  if (picked.at(-1) !== all.at(-1)) picked.push(all.at(-1));
+
+  const { width: srcWidth, height: srcHeight } = await sharp(path.join(tmp, picked[0])).metadata();
+  if (srcWidth !== srcHeight) throw new Error(`${source}: expected a square clip, got ${srcWidth}x${srcHeight}`);
+  const widths = WIDTHS.filter((w) => w <= srcWidth);
+  if (widths.length === 0) widths.push(srcWidth);
+
+  // 3. The clip's background colour, from the corners of the first and last frames.
+  //    The section is painted in exactly this colour, so the picture has no visible edge.
+  const corners = [];
+  for (const file of [picked[0], picked.at(-1)]) {
+    const { data } = await sharp(path.join(tmp, file)).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+    const patch = 24;
+    for (const [x0, y0] of [
+      [4, 4],
+      [srcWidth - patch - 4, 4],
+      [4, srcHeight - patch - 4],
+      [srcWidth - patch - 4, srcHeight - patch - 4],
+    ]) {
+      const sum = [0, 0, 0];
+      for (let y = y0; y < y0 + patch; y++)
+        for (let x = x0; x < x0 + patch; x++) {
+          const i = (y * srcWidth + x) * 3;
+          sum[0] += data[i];
+          sum[1] += data[i + 1];
+          sum[2] += data[i + 2];
+        }
+      corners.push(sum.map((v) => v / (patch * patch)));
+    }
+  }
+  const spread = Math.max(...[0, 1, 2].map((c) => Math.max(...corners.map((k) => k[c])) - Math.min(...corners.map((k) => k[c]))));
+  if (spread > 6) console.warn(`Warning: the clip's background is not one flat colour (corners differ by ${spread.toFixed(1)}).`);
+  const background =
+    "#" +
+    [0, 1, 2]
+      .map((c) => Math.round(corners.reduce((s, k) => s + k[c], 0) / corners.length).toString(16).padStart(2, "0"))
+      .join("");
+
+  // 4. Encode.
+  await rm(outDir, { recursive: true, force: true });
+  await mkdir(outDir, { recursive: true });
+  const totals = Object.fromEntries(widths.map((w) => [w, 0]));
+  for (const [i, file] of picked.entries()) {
+    for (const w of widths) {
+      const buffer = await sharp(path.join(tmp, file)).resize({ width: w, kernel: "lanczos3" }).webp(WEBP).toBuffer();
+      await writeFile(path.join(outDir, `${String(i).padStart(3, "0")}-${w}.webp`), buffer);
+      totals[w] += buffer.length;
+    }
+  }
+
+  const manifest = `// Generated by scripts/build-how-it-works-frames.mjs. Do not edit by hand; run "npm run how-it-works:frames".
+
+/** The "How It Works" scroll sequence: a framed picture separating into its five layers. */
+export const howItWorksFrames = {
+  /** Number of stills, named 000 to ${String(picked.length - 1).padStart(3, "0")}. The first is the finished frame; the last is fully apart. */
+  count: ${picked.length},
+  /** Widths in pixels each still is exported at (they are square). */
+  widths: ${JSON.stringify(widths)},
+  /** The flat background colour of the stills. The section uses it so the picture has no edge. */
+  background: ${JSON.stringify(background)},
+} as const;
+`;
+  await writeFile(manifestPath, manifest);
+
+  console.log(`${path.relative(root, source)}: ${all.length} frames at ${srcWidth} px, kept ${picked.length}`);
+  console.log(`Background ${background}`);
+  for (const w of widths) console.log(`  ${String(w).padStart(4)} px  ${(totals[w] / 1048576).toFixed(2)} MB for the whole sequence`);
+} finally {
+  await rm(tmp, { recursive: true, force: true });
+}
