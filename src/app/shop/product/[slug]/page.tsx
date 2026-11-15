@@ -56,7 +56,7 @@ export default async function ProductPage({ params }: PageProps) {
 
   return (
     <>
-      <div className="bg-stone-50 border-b">
+      <div className="border-b bg-sand">
         <div className="container-wide py-3">
           <nav className="flex items-center gap-2 text-sm">
             <Link href="/shop" className="text-muted-foreground hover:text-foreground">Shop</Link>
@@ -78,7 +78,7 @@ export default async function ProductPage({ params }: PageProps) {
         <div className="container-wide">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             <div className="space-y-4">
-              <div className="aspect-square bg-stone-100 rounded-lg flex items-center justify-center overflow-hidden">
+              <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-stone-100">
                 {product.images[0] ? (
                   <img src={product.images[0]} alt={product.name} className="h-full w-full object-cover" />
                 ) : (
@@ -104,7 +104,7 @@ export default async function ProductPage({ params }: PageProps) {
                 {product.collection ? (
                   <Badge variant="secondary" className="mb-2">{product.collection.name}</Badge>
                 ) : null}
-                <h1 className="text-3xl font-heading font-semibold mb-2">{product.name}</h1>
+                <h1 className="mb-2 font-heading text-3xl font-semibold tracking-tight md:text-4xl">{product.name}</h1>
                 <div className="flex items-baseline gap-3">
                   <p className="text-2xl font-semibold text-primary">{formatMoney(product.price)}</p>
                   {product.comparePrice ? (
@@ -120,11 +120,11 @@ export default async function ProductPage({ params }: PageProps) {
               <PurchaseControls productName={product.name} sizes={product.sizes} />
 
               <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="text-center p-3 bg-stone-50 rounded-lg">
+                <div className="rounded-xl border border-primary/15 bg-sand/60 p-3 text-center">
                   <RotateCcw className="w-5 h-5 mx-auto mb-1 text-primary" />
                   <p className="text-xs">Easy returns</p>
                 </div>
-                <div className="text-center p-3 bg-stone-50 rounded-lg">
+                <div className="rounded-xl border border-primary/15 bg-sand/60 p-3 text-center">
                   <Shield className="w-5 h-5 mx-auto mb-1 text-primary" />
                   <p className="text-xs">Quality guaranteed</p>
                 </div>
@@ -170,9 +170,9 @@ export default async function ProductPage({ params }: PageProps) {
       </section>
 
       {relatedProducts.length > 0 ? (
-        <section className="py-12 bg-stone-50">
+        <section className="bg-sand py-12 lg:py-16">
           <div className="container-wide">
-            <h2 className="text-2xl font-heading font-semibold mb-8">You May Also Like</h2>
+            <h2 className="mb-8 font-heading text-2xl font-semibold tracking-tight md:text-3xl">You May Also Like</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {relatedProducts.map((related) => (
                 <Link key={related.id} href={`/shop/product/${related.slug}`}>

@@ -312,7 +312,7 @@ export default function QuotePage() {
   if (isComplete) {
     return (
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center bg-sand py-16">
-        <div className="container-wide max-w-xl">
+        <div className="container-wide max-w-xl!">
           <Card>
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
@@ -353,7 +353,7 @@ export default function QuotePage() {
       lede="Tell us about your project and we'll provide options that fit your budget."
     />
     <div className="min-h-[calc(100vh-200px)] bg-sand py-10 lg:py-14">
-      <div className="container-wide max-w-3xl">
+      <div className="container-wide max-w-3xl!">
 
         {/* Progress */}
         <div className="mb-8">

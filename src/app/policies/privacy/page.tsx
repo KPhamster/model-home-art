@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { PageHero } from "@/components/ui/page-hero";
 import { businessConfig } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -8,19 +9,17 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="py-12 lg:py-16">
-      <div className="container-wide max-w-3xl">
-        <h1 className="text-3xl md:text-4xl font-heading font-semibold mb-8">
-          Privacy Policy
-        </h1>
-
+    <>
+    <PageHero compact title="Privacy Policy" />
+    <div className="bg-background py-12 lg:py-16">
+      <div className="container-wide max-w-3xl!">
         <p className="text-muted-foreground mb-8">
           Last updated: {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
         </p>
 
         <div className="prose-custom text-muted-foreground">
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Information We Collect</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Information We Collect</h2>
             <p>We collect information you provide directly to us, including:</p>
             <ul className="mt-4 space-y-2">
               <li>
@@ -42,8 +41,8 @@ export default function PrivacyPolicyPage() {
             </ul>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">How We Use Your Information</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">How We Use Your Information</h2>
             <ul className="space-y-2">
               <li>Process and fulfill your orders and quote requests</li>
               <li>Communicate with you about your orders, quotes, and inquiries</li>
@@ -54,8 +53,8 @@ export default function PrivacyPolicyPage() {
             </ul>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Information Sharing</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Information Sharing</h2>
             <p>We do not sell your personal information. We may share your information with:</p>
             <ul className="mt-4 space-y-2">
               <li>
@@ -68,8 +67,8 @@ export default function PrivacyPolicyPage() {
             </ul>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Data Security</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Data Security</h2>
             <p>
               We implement appropriate technical and organizational measures to protect your 
               personal information. Payment information is processed securely through Stripe 
@@ -77,8 +76,8 @@ export default function PrivacyPolicyPage() {
             </p>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Your Rights</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Your Rights</h2>
             <p>You have the right to:</p>
             <ul className="mt-4 space-y-2">
               <li>Access the personal information we hold about you</li>
@@ -88,8 +87,8 @@ export default function PrivacyPolicyPage() {
             </ul>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Cookies</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Cookies</h2>
             <p>
               We use cookies and similar technologies to improve your experience on our website, 
               remember your preferences, and analyze site traffic. You can control cookies through 
@@ -97,16 +96,16 @@ export default function PrivacyPolicyPage() {
             </p>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Third-Party Links</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Third-Party Links</h2>
             <p>
               Our website may contain links to third-party websites. We are not responsible for 
               the privacy practices of these sites. We encourage you to read their privacy policies.
             </p>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Changes to This Policy</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Changes to This Policy</h2>
             <p>
               We may update this privacy policy from time to time. We will notify you of any 
               material changes by posting the new policy on this page and updating the "Last updated" date.
@@ -114,7 +113,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-4">Contact Us</h2>
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Contact Us</h2>
             <p>
               If you have questions about this privacy policy or our data practices, contact us at:
             </p>
@@ -134,5 +133,6 @@ export default function PrivacyPolicyPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { PageHero } from "@/components/ui/page-hero";
 import Link from "next/link";
 import { businessConfig } from "@/lib/config";
 
@@ -9,15 +10,13 @@ export const metadata: Metadata = {
 
 export default function ReturnsPolicyPage() {
   return (
-    <div className="py-12 lg:py-16">
-      <div className="container-wide max-w-3xl">
-        <h1 className="text-3xl md:text-4xl font-heading font-semibold mb-8">
-          Returns Policy
-        </h1>
-
+    <>
+    <PageHero compact title="Returns Policy" />
+    <div className="bg-background py-12 lg:py-16">
+      <div className="container-wide max-w-3xl!">
         <div className="prose-custom text-muted-foreground">
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Ready-Made Frames</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Ready-Made Frames</h2>
             <p>
               We want you to love your frames! Ready-made frames may be returned within 30 days 
               of delivery for a full refund, subject to the following conditions:
@@ -30,8 +29,8 @@ export default function ReturnsPolicyPage() {
             </ul>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Custom Framing Orders</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Custom Framing Orders</h2>
             <p>
               Custom framing is made specifically for you, so custom orders are generally non-refundable. 
               However, we stand behind our work:
@@ -52,16 +51,16 @@ export default function ReturnsPolicyPage() {
             </ul>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Exchanges</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Exchanges</h2>
             <p>
               Want a different size or style? We're happy to process exchanges for ready-made 
               frames within 30 days. Contact us to arrange the exchange.
             </p>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">Damaged or Defective Items</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Damaged or Defective Items</h2>
             <p>
               If your order arrives damaged or defective:
             </p>
@@ -75,8 +74,8 @@ export default function ReturnsPolicyPage() {
             </p>
           </section>
 
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-foreground mb-4">How to Return</h2>
+          <section className="mb-10 border-b border-border pb-10">
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">How to Return</h2>
             <ol className="list-decimal list-inside space-y-2">
               <li>
                 Contact us at{" "}
@@ -93,7 +92,7 @@ export default function ReturnsPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-foreground mb-4">Questions?</h2>
+            <h2 className="mb-4 font-heading text-2xl font-semibold tracking-tight text-foreground">Questions?</h2>
             <p>
               Contact us at{" "}
               <a href={`mailto:${businessConfig.email}`} className="text-primary hover:underline">
@@ -109,5 +108,6 @@ export default function ReturnsPolicyPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
