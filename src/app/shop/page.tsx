@@ -2,7 +2,9 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { CtaBanner } from "@/components/ui/cta-banner";
+import { PageHero } from "@/components/ui/page-hero";
+import { SectionHeading } from "@/components/ui/section-heading";
 import prisma from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -54,101 +56,101 @@ export default async function ShopPage() {
 
   return (
     <>
-      <section className="py-12 lg:py-16 bg-gradient-to-b from-stone-100 to-background">
-        <div className="container-wide">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-heading font-semibold mb-4">
-              Shop Framed Art
-            </h1>
-            <p className="text-xl text-muted-foreground mb-6">
-              Beautiful art in quality frames — ready to ship!
-            </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              <Badge variant="secondary" className="px-3 py-1">Easy returns</Badge>
-              <Badge variant="secondary" className="px-3 py-1">Ships in 3-5 days</Badge>
+      <PageHero title="Shop Framed Art" lede="Beautiful art in quality frames — ready to ship!">
+        <ul className="flex flex-wrap justify-center gap-2.5">
+          {["Easy returns", "Ships in 3-5 days"].map((promise) => (
+            <li
+              key={promise}
+              className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-stone-200"
+            >
+              {promise}
+            </li>
+          ))}
+        </ul>
+      </PageHero>
+
+      {/* Shown only when there is at least one collection, so the heading never stands alone. */}
+      {collections.length > 0 ? (
+        <section className="bg-background py-16 lg:py-24">
+          <div className="container-wide">
+            <SectionHeading align="left" title="Shop by Collection" />
+            <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {collections.map((collection) => (
+                <Link key={collection.id} href={`/shop/${collection.slug}`} className="reveal">
+                  <Card className="group h-full overflow-hidden rounded-xl py-0 transition-shadow duration-300 hover:shadow-lg">
+                    <div className="relative aspect-[3/2] overflow-hidden bg-stone-200">
+                      {firstImage(collection.image) ? (
+                        <img
+                          src={firstImage(collection.image)}
+                          alt={collection.name}
+                          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+                          <span className="text-sm">[Collection Image]</span>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <div className="absolute bottom-4 left-4 text-white">
+                        <h3 className="font-heading text-xl font-semibold">{collection.name}</h3>
+                        <p className="text-sm text-white/80">{collection._count.products} products</p>
+                      </div>
+                    </div>
+                    <CardContent className="p-4">
+                      <p className="text-sm text-muted-foreground">{collection.description}</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      <section className="py-12 lg:py-16 bg-background">
+      <section className="bg-sand py-16 lg:py-24">
         <div className="container-wide">
-          <h2 className="text-2xl font-heading font-semibold mb-8">Shop by Collection</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {collections.map((collection) => (
-              <Link key={collection.id} href={`/shop/${collection.slug}`}>
-                <Card className="group overflow-hidden hover:shadow-lg transition-shadow h-full">
-                  <div className="aspect-[3/2] bg-stone-200 relative overflow-hidden">
-                    {firstImage(collection.image) ? (
-                      <img src={firstImage(collection.image)} alt={collection.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                        <span className="text-sm">[Collection Image]</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition-colors" />
-                    <div className="absolute bottom-4 left-4 text-white">
-                      <h3 className="text-xl font-semibold">{collection.name}</h3>
-                      <p className="text-sm text-white/80">{collection._count.products} products</p>
-                    </div>
-                  </div>
-                  <CardContent className="p-4">
-                    <p className="text-sm text-muted-foreground">{collection.description}</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-12 lg:py-16 bg-stone-50">
-        <div className="container-wide">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-heading font-semibold">Featured Frames</h2>
-            <Link href="/shop/all" className="text-primary font-medium hover:underline">
+          <div className="flex items-end justify-between gap-6">
+            <SectionHeading align="left" title="Featured Frames" />
+            <Link href="/shop/all" className="reveal shrink-0 pb-1 font-medium text-primary underline-offset-4 hover:underline">
               View all →
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 lg:gap-6">
             {featuredProducts.map((product) => (
-              <Link key={product.id} href={`/shop/product/${product.slug}`}>
-                <Card className="group overflow-hidden hover:shadow-md transition-shadow h-full">
-                  <div className="aspect-square bg-stone-100 relative overflow-hidden">
+              <Link key={product.id} href={`/shop/product/${product.slug}`} className="reveal">
+                <Card className="group h-full overflow-hidden rounded-xl py-0 transition-shadow duration-300 hover:shadow-md">
+                  <div className="relative aspect-square overflow-hidden bg-stone-100">
                     <ProductImage src={product.images[0]} alt={product.name} />
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="font-medium text-sm group-hover:text-primary transition-colors line-clamp-1">
+                    <h3 className="line-clamp-1 text-sm font-medium transition-colors group-hover:text-primary">
                       {product.name}
                     </h3>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {product.sizes[0] ?? product.collection?.name ?? "Ready to ship"}
                     </p>
-                    <p className="font-semibold mt-2">{formatMoney(product.price)}</p>
+                    <p className="mt-2 font-semibold">{formatMoney(product.price)}</p>
                   </CardContent>
                 </Card>
               </Link>
             ))}
           </div>
-          {featuredProducts.length === 0 ? (
-            <p className="text-muted-foreground">No featured products yet.</p>
-          ) : null}
+          {featuredProducts.length === 0 ? <p className="text-muted-foreground">No featured products yet.</p> : null}
         </div>
       </section>
 
-      <section className="py-12 lg:py-16 bg-primary text-white">
-        <div className="container-wide text-center">
-          <h2 className="text-2xl md:text-3xl font-heading font-semibold mb-4">
-            Need something custom?
-          </h2>
-          <p className="text-lg text-white/80 mb-6 max-w-2xl mx-auto">
-            Our ready-made frames are great for standard sizes. For custom dimensions or special items, get a custom framing quote.
-          </p>
-          <Button asChild variant="secondary" size="lg" className="bg-white text-primary hover:bg-white/90">
-            <Link href="/quote">Get a Custom Quote</Link>
-          </Button>
-        </div>
-      </section>
+      <CtaBanner
+        title={
+          <>
+            Need something <span className="italic text-[#e3cdb2]">custom?</span>
+          </>
+        }
+        lede="Our ready-made frames are great for standard sizes. For custom dimensions or special items, get a custom framing quote."
+      >
+        <Button asChild size="lg" className="h-12 px-7 text-base">
+          <Link href="/quote">Get a Custom Quote</Link>
+        </Button>
+      </CtaBanner>
     </>
   );
 }
