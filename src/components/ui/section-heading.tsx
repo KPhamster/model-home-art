@@ -11,7 +11,7 @@ type SectionHeadingProps = {
 };
 
 /**
- * How every homepage section below the hero opens: a short copper rule, the title in the
+ * How every section below a hero opens, on the homepage and the inner pages: a short copper rule, the title in the
  * heading typeface, and an optional lede.
  */
 export function SectionHeading({ title, lede, align = "center", tone = "light", className }: SectionHeadingProps) {

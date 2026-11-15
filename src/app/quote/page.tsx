@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { PageHero } from "@/components/ui/page-hero";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -310,21 +311,21 @@ export default function QuotePage() {
   // Confirmation Screen
   if (isComplete) {
     return (
-      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-16">
+      <div className="flex min-h-[calc(100vh-200px)] items-center justify-center bg-sand py-16">
         <div className="container-wide max-w-xl">
           <Card>
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
-              <h1 className="text-2xl font-heading font-semibold mb-4">
+              <h1 className="mb-4 font-heading text-3xl font-semibold tracking-tight">
                 Thanks — we got your request!
               </h1>
               <p className="text-muted-foreground mb-6">
-                We'll follow up within <strong>{businessConfig.responseTime}</strong> with 
+                We&apos;ll follow up within <strong>{businessConfig.responseTime}</strong> with 
                 options aligned to your budget and timeline.
               </p>
-              <div className="p-4 bg-stone-50 rounded-lg mb-6 text-sm">
+              <div className="mb-6 rounded-xl border border-primary/15 bg-sand/60 p-4 text-sm">
                 <p className="font-medium mb-1">Visit us anytime:</p>
                 <p className="text-muted-foreground">{businessConfig.address.full}</p>
                 <p className="text-muted-foreground">{businessConfig.hours.display}</p>
@@ -345,17 +346,14 @@ export default function QuotePage() {
   }
 
   return (
-    <div className="py-8 lg:py-12 bg-stone-50 min-h-[calc(100vh-200px)]">
+    <>
+    <PageHero
+      compact
+      title="Get a Fast Quote"
+      lede="Tell us about your project and we'll provide options that fit your budget."
+    />
+    <div className="min-h-[calc(100vh-200px)] bg-sand py-10 lg:py-14">
       <div className="container-wide max-w-3xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-heading font-semibold mb-2">
-            Get a Fast Quote
-          </h1>
-          <p className="text-muted-foreground">
-            Tell us about your project and we'll provide options that fit your budget.
-          </p>
-        </div>
 
         {/* Progress */}
         <div className="mb-8">
@@ -377,7 +375,7 @@ export default function QuotePage() {
                       ? "bg-primary text-white"
                       : step.id < currentStep
                       ? "bg-primary/20 text-primary"
-                      : "bg-stone-200"
+                      : "bg-white text-muted-foreground ring-1 ring-border"
                   }`}
                 >
                   {step.id < currentStep ? (
@@ -400,7 +398,7 @@ export default function QuotePage() {
             {currentStep === 1 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-semibold mb-1">What are you framing?</h2>
+                  <h2 className="mb-1 font-heading text-2xl font-semibold tracking-tight">What are you framing?</h2>
                   <p className="text-sm text-muted-foreground">
                     Select the category that best describes your item.
                   </p>
@@ -442,7 +440,7 @@ export default function QuotePage() {
             {currentStep === 2 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-semibold mb-1">Size & Photos</h2>
+                  <h2 className="mb-1 font-heading text-2xl font-semibold tracking-tight">Size & Photos</h2>
                   <p className="text-sm text-muted-foreground">
                     Upload photos of your item and provide dimensions if known.
                   </p>
@@ -595,7 +593,7 @@ export default function QuotePage() {
             {currentStep === 3 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-semibold mb-1">Style & Budget</h2>
+                  <h2 className="mb-1 font-heading text-2xl font-semibold tracking-tight">Style & Budget</h2>
                   <p className="text-sm text-muted-foreground">
                     Help us understand your preferences.
                   </p>
@@ -695,7 +693,7 @@ export default function QuotePage() {
             {currentStep === 4 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-semibold mb-1">Timeline & Service</h2>
+                  <h2 className="mb-1 font-heading text-2xl font-semibold tracking-tight">Timeline & Service</h2>
                   <p className="text-sm text-muted-foreground">
                     When do you need it and how should we get it to you?
                   </p>
@@ -770,7 +768,7 @@ export default function QuotePage() {
             {currentStep === 5 && (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-xl font-semibold mb-1">Your Contact Info</h2>
+                  <h2 className="mb-1 font-heading text-2xl font-semibold tracking-tight">Your Contact Info</h2>
                   <p className="text-sm text-muted-foreground">
                     How should we reach you with your quote?
                   </p>
@@ -864,10 +862,11 @@ export default function QuotePage() {
         <div className="mt-6 text-center text-sm text-muted-foreground">
           <p>
             <Check className="w-4 h-4 inline mr-1 text-primary" />
-            We'll respond within {businessConfig.responseTime}
+            We&apos;ll respond within {businessConfig.responseTime}
           </p>
         </div>
       </div>
     </div>
+    </>
   );
 }

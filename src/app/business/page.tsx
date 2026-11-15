@@ -1,18 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { PageHero } from "@/components/ui/page-hero";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { businessTypes } from "@/lib/config";
 import { toast } from "sonner";
 import {
   Building2, Users, Palette, Wrench, Truck,
-  Check, ArrowRight, Upload, X
+  ArrowRight, Upload, X
 } from "lucide-react";
 
 // Maximum total upload size: 4MB (Vercel serverless function limit is 4.5MB)
@@ -155,120 +155,92 @@ export default function BusinessPage() {
 
   return (
     <>
-      {/* Hero */}
-      <section className="py-16 lg:py-24 bg-gradient-to-b from-stone-100 to-background">
-        <div className="container-wide">
-          <div className="max-w-3xl mx-auto text-center">
-            <Badge className="mb-4">Business Services</Badge>
-            <h1 className="text-4xl md:text-5xl font-heading font-semibold mb-6">
-              Framing for businesses in the United States
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              From offices to hotels, we provide reliable, consistent, affordable framing solutions for businesses of all sizes. Volume pricing available.
-            </p>
-            <Button asChild size="lg">
-              <a href="#request">Request Business Pricing</a>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Business Services"
+        title="Framing for businesses in the United States"
+        lede="From offices to hotels, we provide reliable, consistent, affordable framing solutions for businesses of all sizes. Volume pricing available."
+      >
+        <Button asChild size="lg" className="h-12 px-7 text-base">
+          <a href="#request">Request Business Pricing</a>
+        </Button>
+      </PageHero>
 
-      {/* Who We Serve */}
-      <section className="py-16 lg:py-20 bg-background">
+      {/* Who we serve */}
+      <section className="bg-background py-16 lg:py-24">
         <div className="container-wide">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-4">
-              Who We Help
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              We work with businesses across the United States.
-            </p>
-          </div>
+          <SectionHeading title="Who We Help" lede="We work with businesses across the United States." />
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          <ul className="mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
             {businessTypes.map((type) => (
-              <div
+              <li
                 key={type}
-                className="p-4 bg-stone-50 rounded-lg text-center border border-border"
+                className="reveal flex items-center justify-center rounded-xl border border-primary/15 bg-sand/60 p-4 text-center"
               >
                 <span className="text-sm font-medium">{type}</span>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
       {/* Services */}
-      <section className="py-16 lg:py-20 bg-stone-50">
+      <section className="bg-sand py-16 lg:py-24">
         <div className="container-wide">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-4">
-              Business Services
-            </h2>
-          </div>
+          <SectionHeading title="Business Services" />
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <ul className="mx-auto mt-12 grid max-w-5xl gap-5 md:grid-cols-2 lg:grid-cols-3">
             {businessServices.map((service) => (
-              <Card key={service.title}>
-                <CardContent className="p-6 flex gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <service.icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">{service.title}</h3>
-                    <p className="text-sm text-muted-foreground">{service.description}</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <li key={service.title} className="reveal flex gap-4 rounded-xl border border-primary/10 bg-white/70 p-6">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/40 text-primary">
+                  <service.icon className="size-5" aria-hidden="true" />
+                </span>
+                <div>
+                  <h3 className="font-heading text-lg font-semibold leading-snug">{service.title}</h3>
+                  <p className="mt-1.5 text-sm text-muted-foreground">{service.description}</p>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
       {/* Process */}
-      <section className="py-16 lg:py-20 bg-background">
+      <section className="bg-background py-16 lg:py-24">
         <div className="container-wide">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-4">
-              Our Process
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              A streamlined approach that saves you time and money.
-            </p>
-          </div>
+          <SectionHeading title="Our Process" lede="A streamlined approach that saves you time and money." />
 
-          <div className="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
+          <ol className="mx-auto mt-12 flex max-w-5xl flex-wrap justify-center gap-4">
             {processSteps.map((step, index) => (
-              <div key={step.title} className="flex items-center gap-2">
-                <div className="flex items-center gap-3 p-4 bg-stone-50 rounded-lg border border-border">
-                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
+              <li key={step.title} className="reveal flex items-center gap-2">
+                <div className="flex items-center gap-3 rounded-xl border border-border bg-white p-4">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
                     {index + 1}
-                  </div>
+                  </span>
                   <div>
-                    <p className="font-semibold text-sm">{step.title}</p>
+                    <p className="font-heading font-semibold leading-snug">{step.title}</p>
                     <p className="text-xs text-muted-foreground">{step.description}</p>
                   </div>
                 </div>
                 {index < processSteps.length - 1 && (
-                  <ArrowRight className="w-5 h-5 text-muted-foreground hidden lg:block" />
+                  <ArrowRight className="hidden h-5 w-5 text-primary/50 lg:block" aria-hidden="true" />
                 )}
-              </div>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       </section>
 
       {/* Request Form */}
-      <section id="request" className="py-16 lg:py-20 bg-stone-50 scroll-mt-20">
+      <section id="request" className="scroll-mt-20 bg-sand py-16 lg:py-24">
         <div className="container-wide">
           <div className="max-w-2xl mx-auto">
             <Card>
               <CardHeader className="text-center">
-                <CardTitle className="text-2xl font-heading">
+                <CardTitle className="font-heading text-3xl font-semibold tracking-tight">
                   Request Business Pricing
                 </CardTitle>
                 <p className="text-muted-foreground">
-                  Tell us about your project and we'll get back to you within 24 business hours.
+                  Tell us about your project and we&apos;ll get back to you within 24 business hours.
                 </p>
               </CardHeader>
               <CardContent>
