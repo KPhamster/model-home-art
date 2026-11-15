@@ -2,7 +2,7 @@
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { faqItems } from "@/lib/config";
-import { SectionHeading } from "./section-heading";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 const lede = "Got questions? We've got answers.";
 

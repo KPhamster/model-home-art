@@ -3,15 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageHero } from "@/components/ui/page-hero";
 import { Textarea } from "@/components/ui/textarea";
 import { businessConfig } from "@/lib/config";
 import { toast } from "sonner";
-import {
-  MapPin, Phone, Mail, Clock, ExternalLink, Check
-} from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
+
+// One row of the shop details list: a small label beside its value.
+const infoRow = "grid gap-1 py-4 sm:grid-cols-[6rem_1fr] sm:gap-6";
+const infoLabel = "text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground sm:pt-1";
 
 const whatToBring = [
   "The item you want framed",
@@ -63,84 +66,70 @@ export default function ContactPage() {
 
   return (
     <>
-      {/* Hero */}
-      <section className="py-16 lg:py-20 bg-gradient-to-b from-stone-100 to-background">
-        <div className="container-wide">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-heading font-semibold mb-6">
-              Contact Us
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Have a question? Want to discuss a project? Stop by the shop or reach out below.
-            </p>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        title="Contact Us"
+        lede="Have a question? Want to discuss a project? Stop by the shop or reach out below."
+      />
 
-      {/* Contact Info & Form */}
-      <section className="py-12 lg:py-16 bg-background">
+      {/* Contact info and form */}
+      <section className="bg-background py-16 lg:py-24">
         <div className="container-wide">
-          <div className="grid lg:grid-cols-2 gap-12">
-            {/* Contact Info */}
-            <div className="flex flex-col h-full">
-              <h2 className="text-2xl font-heading font-semibold mb-6">
-                Visit Our Shop
-              </h2>
-              
-              <Card className="mb-6">
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">{businessConfig.address.street}</p>
-                      <p className="text-muted-foreground">
-                        {businessConfig.address.city}, {businessConfig.address.state} {businessConfig.address.zip}
+          <div className="grid gap-14 lg:grid-cols-2 lg:gap-16">
+            {/* Contact info */}
+            <div className="flex h-full flex-col">
+              <span aria-hidden="true" className="mb-5 block h-0.5 w-10 rounded-full bg-primary" />
+              <h2 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">Visit Our Shop</h2>
+
+              <dl className="mt-6 divide-y divide-border border-y border-border">
+                <div className={infoRow}>
+                  <dt className={infoLabel}>Address</dt>
+                  <dd>
+                    <p className="font-medium">{businessConfig.address.street}</p>
+                    <p className="text-muted-foreground">
+                      {businessConfig.address.city}, {businessConfig.address.state} {businessConfig.address.zip}
+                    </p>
+                  </dd>
+                </div>
+                <div className={infoRow}>
+                  <dt className={infoLabel}>Hours</dt>
+                  <dd>
+                    {businessConfig.hours.structured.map((item, i) => (
+                      <p key={i} className={item.hours === "Closed" ? "text-muted-foreground" : ""}>
+                        <span className="font-medium">{item.days}:</span> {item.hours}
                       </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <Clock className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <div>
-                      {businessConfig.hours.structured.map((item, i) => (
-                        <p key={i} className={item.hours === "Closed" ? "text-muted-foreground" : ""}>
-                          <span className="font-medium">{item.days}:</span> {item.hours}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-5 w-5 text-primary flex-shrink-0" />
-                    <a 
-                      href={`tel:${businessConfig.phone}`} 
-                      className="font-medium hover:text-primary transition-colors"
-                    >
+                    ))}
+                  </dd>
+                </div>
+                <div className={infoRow}>
+                  <dt className={infoLabel}>Phone</dt>
+                  <dd>
+                    <a href={`tel:${businessConfig.phone}`} className="font-medium transition-colors hover:text-primary">
                       {businessConfig.phone}
                     </a>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 text-primary flex-shrink-0" />
-                    <a 
-                      href={`mailto:${businessConfig.email}`} 
-                      className="font-medium hover:text-primary transition-colors"
+                  </dd>
+                </div>
+                <div className={infoRow}>
+                  <dt className={infoLabel}>Email</dt>
+                  <dd>
+                    <a
+                      href={`mailto:${businessConfig.email}`}
+                      className="break-all font-medium transition-colors hover:text-primary"
                     >
                       {businessConfig.email}
                     </a>
-                  </div>
-                </CardContent>
-              </Card>
+                  </dd>
+                </div>
+              </dl>
 
-              <Button asChild className="w-full mb-8">
+              <Button asChild size="lg" className="mt-6 h-12 w-full text-base">
                 <a href={businessConfig.googleMapsUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="w-4 h-4 mr-2" />
+                  <ExternalLink className="mr-2 h-4 w-4" />
                   Get Directions
                 </a>
               </Button>
 
-              {/* Map Embed */}
-              <div className="aspect-square md:aspect-auto md:flex-1 min-h-[250px] rounded-lg border border-border overflow-hidden mb-8">
+              {/* Map embed */}
+              <div className="my-8 aspect-square min-h-[250px] overflow-hidden rounded-xl border border-border md:aspect-auto md:flex-1">
                 <iframe
                   src={businessConfig.googleMapsEmbedUrl}
                   width="100%"
@@ -153,32 +142,27 @@ export default function ContactPage() {
                 />
               </div>
 
-              {/* What to Bring */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">What to Bring</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Coming in for a consultation? Here's what to have ready:
-                  </p>
-                  <ul className="space-y-2">
-                    {whatToBring.map((item) => (
-                      <li key={item} className="flex items-center gap-2 text-sm">
-                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+              {/* What to bring */}
+              <div className="rounded-xl border border-primary/15 bg-sand/60 p-6">
+                <h3 className="font-heading text-lg font-semibold">What to Bring</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Coming in for a consultation? Here&apos;s what to have ready:
+                </p>
+                <ul className="mt-4 space-y-2">
+                  {whatToBring.map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             {/* Contact Form */}
             <div>
-              <h2 className="text-2xl font-heading font-semibold mb-6">
-                Send a Message
-              </h2>
+              <span aria-hidden="true" className="mb-5 block h-0.5 w-10 rounded-full bg-primary" />
+              <h2 className="mb-6 font-heading text-2xl font-semibold tracking-tight md:text-3xl">Send a Message</h2>
               
               <Card>
                 <CardContent className="p-6">
@@ -227,8 +211,8 @@ export default function ContactPage() {
               </Card>
 
               {/* Quick Quote CTA */}
-              <div className="mt-6 p-6 bg-primary/5 rounded-lg border border-primary/20 text-center">
-                <p className="font-medium mb-2">Need a framing quote?</p>
+              <div className="mt-6 rounded-xl border border-primary/15 bg-sand/60 p-6 text-center">
+                <p className="mb-2 font-heading text-lg font-semibold">Need a framing quote?</p>
                 <p className="text-sm text-muted-foreground mb-4">
                   Use our quote form for faster response with photos.
                 </p>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Frame, Image, MessageCircle, Package, Palette, Shield, Truck, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { services } from "@/lib/config";
-import { SectionHeading } from "./section-heading";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 const lede = "Everything you need to frame, display, and preserve your most meaningful pieces.";
 

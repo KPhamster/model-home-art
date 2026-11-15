@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { Metadata } from "next";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { extendedFramingCategories } from "@/lib/config";
 import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CtaBanner } from "@/components/ui/cta-banner";
+import { Input } from "@/components/ui/input";
+import { PageHero, onDarkOutline } from "@/components/ui/page-hero";
 import { Photo } from "@/components/ui/photo";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { extendedFramingCategories } from "@/lib/config";
 import type { PhotoName } from "@/lib/photos";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "What We Frame",
@@ -98,157 +101,116 @@ const cardDescriptions: Partial<Record<string, string>> = {
   flags: "Preserve tradition and pride with custom framing that supports and protects every fold.",
 };
 
+const heroLede =
+  "If it's meaningful to you, we can frame it. Browse our categories below or ask us about anything you'd like to preserve and display.";
+const moreLede =
+  "Here's a partial list of other items we frame. Don't see what you're looking for? Just ask — if it can be framed, we can do it!";
+const closingLede = "Send us photos and we'll provide options that fit your style and budget.";
+
 export default function WhatWeFramePage() {
   return (
     <>
-      {/* Hero */}
-      <section className="py-16 lg:py-24 bg-gradient-to-b from-stone-100 to-background">
-        <div className="container-wide">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-heading font-semibold mb-6">
-              What We Frame
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              If it's meaningful to you, we can frame it. Browse our categories below or ask us about anything you'd like to preserve and display.
-            </p>
-            
-            {/* Search */}
-            <div className="max-w-md mx-auto relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search categories..."
-                className="pl-10"
-              />
-            </div>
-          </div>
+      <PageHero title="What We Frame" lede={heroLede}>
+        <div className="relative mx-auto max-w-md">
+          <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400" />
+          <Input
+            type="search"
+            placeholder="Search categories..."
+            className="h-12 border-white/15 bg-white/5 pl-11 text-base text-stone-50 placeholder:text-stone-400"
+          />
         </div>
-      </section>
+      </PageHero>
 
-      {/* Main Categories */}
-      <section className="py-16 lg:py-20 bg-background">
+      {/* Main categories */}
+      <section className="bg-background py-16 lg:py-24">
         <div className="container-wide">
-          <h2 className="text-2xl font-heading font-semibold mb-8">Popular Categories</h2>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <SectionHeading align="left" title="Popular Categories" />
+
+          <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {extendedFramingCategories.map((category) => {
               const cardImage = cardImages[category.id];
-              const isJersey = category.id === "jerseys";
               const description =
                 cardDescriptions[category.id] ??
                 `Professional framing for your ${category.name.toLowerCase()}. We'll help you choose the perfect frame style, matting, and glass.`;
               return (
-                <Card
+                // scroll-mt keeps the card clear of the sticky header when the homepage links to it.
+                <article
                   key={category.id}
                   id={category.id}
-                  className="group hover:shadow-lg transition-shadow py-0 overflow-hidden"
+                  className="reveal group scroll-mt-24 overflow-hidden rounded-xl border border-border bg-white transition-shadow duration-300 hover:shadow-lg"
                 >
-                  <CardContent className="p-0">
-                    <div
-                      className={`bg-stone-100 overflow-hidden ${
-                        cardImage
-                          ? "min-h-[300px] sm:min-h-[330px] lg:min-h-[360px]"
-                          : "aspect-video flex items-center justify-center text-muted-foreground rounded-lg"
-                      }`}
+                  {/* The photos are two wide by three tall, and so is their box: nothing is cropped. */}
+                  <div
+                    className={cn(
+                      "overflow-hidden bg-stone-100",
+                      cardImage ? "aspect-[2/3]" : "flex aspect-video items-center justify-center text-muted-foreground",
+                    )}
+                  >
+                    {cardImage ? (
+                      <Photo
+                        name={cardImage.name}
+                        alt={cardImage.alt}
+                        sizes="(min-width: 1400px) 440px, (min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                      />
+                    ) : (
+                      <span className="text-sm">[{category.name} Image]</span>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-heading text-xl font-semibold transition-colors group-hover:text-primary">
+                      {category.name}
+                    </h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="mt-4 border-primary/60 text-primary hover:bg-primary hover:text-white"
                     >
-                      {cardImage ? (
-                        <Photo
-                          name={cardImage.name}
-                          alt={cardImage.alt}
-                          sizes="(min-width: 1400px) 440px, (min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                          className={isJersey ? "h-full w-full object-contain" : "h-full w-full object-cover"}
-                        />
-                      ) : (
-                        <span className="text-sm">[{category.name} Image]</span>
-                      )}
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
-                        {category.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {description}
-                      </p>
-                      <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        className={
-                          cardImage
-                            ? "border-primary/70 text-primary hover:bg-primary/90 hover:text-white"
-                            : ""
-                        }
-                      >
-                        <Link href="/quote">Get a Quote</Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <Link href="/quote">Get a Quote</Link>
+                    </Button>
+                  </div>
+                </article>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* All Items List */}
-      <section className="py-16 lg:py-20 bg-stone-50">
+      {/* Everything else */}
+      <section className="bg-sand py-16 lg:py-24">
         <div className="container-wide">
-          <h2 className="text-2xl font-heading font-semibold mb-4">And So Much More...</h2>
-          <p className="text-muted-foreground mb-8 max-w-2xl">
-            Here's a partial list of other items we frame. Don't see what you're looking for? Just ask — if it can be framed, we can do it!
-          </p>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+          <SectionHeading align="left" title="And So Much More..." lede={moreLede} className="max-w-2xl" />
+
+          <ul className="reveal mt-10 flex flex-wrap gap-2">
             {additionalItems.map((item) => (
-              <div
+              <li
                 key={item}
-                className="px-3 py-2 bg-white rounded border border-border text-sm hover:border-primary/50 transition-colors"
+                className="rounded-full border border-primary/15 bg-white/70 px-4 py-2 text-sm transition-colors hover:border-primary/50"
               >
                 {item}
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="relative py-16 lg:py-24 text-white overflow-hidden">
-        <div className="absolute inset-0">
-          <Photo
-            name="call-to-action"
-            alt="Custom framed art in a warm home setting"
-            sizes="100vw"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/50" />
-        </div>
-        <div className="relative container-wide text-center">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-heading font-semibold mb-6">
-            Have something to frame?
-          </h2>
-          <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-            Send us photos and we'll provide options that fit your style and budget.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              asChild
-              size="lg"
-              variant="secondary"
-              className="text-base bg-primary text-white hover:bg-white hover:text-primary"
-            >
-              <Link href="/quote">Get a Fast Quote</Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="secondary"
-              className="text-base bg-white text-primary hover:bg-primary hover:text-white"
-            >
-              <Link href="/contact">Visit Our Shop</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+      <CtaBanner
+        title={
+          <>
+            Have something to <span className="italic text-[#e3cdb2]">frame?</span>
+          </>
+        }
+        lede={closingLede}
+      >
+        <Button asChild size="lg" className="h-12 px-7 text-base">
+          <Link href="/quote">Get a Fast Quote</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline" className={cn("h-12 px-7 text-base", onDarkOutline)}>
+          <Link href="/contact">Visit Our Shop</Link>
+        </Button>
+      </CtaBanner>
     </>
   );
 }

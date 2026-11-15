@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Photo } from "@/components/ui/photo";
-import { SectionHeading } from "./section-heading";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 const lede =
   "We work with offices, interior designers, hotels, medical facilities, and more. Whether you need 5 frames or 500, we deliver consistent quality on time and on budget.";

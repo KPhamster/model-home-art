@@ -3,7 +3,7 @@ import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Photo } from "@/components/ui/photo";
 import { businessConfig } from "@/lib/config";
-import { SectionHeading } from "./section-heading";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 const label = "text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground sm:pt-1.5";
 const row = "grid gap-1 py-4 sm:grid-cols-[7rem_1fr] sm:gap-6";

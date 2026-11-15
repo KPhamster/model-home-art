@@ -1,61 +1,17 @@
 import Link from "next/link";
 import { Metadata } from "next";
+import { ArrowRight, Camera, Check, Frame, Image as ImageIcon, Layers, Palette, Shield, Sparkles, Truck, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { framingCategories, businessConfig } from "@/lib/config";
-import {
-  Frame,
-  Layers,
-  Shield,
-  Sparkles,
-  Wrench,
-  Image as ImageIcon,
-  Check,
-  ArrowRight,
-  Camera,
-  Palette,
-  Truck,
-  Shirt,
-  Square,
-  ScrollText,
-  Image as ImageLucide,
-  Scissors,
-  Box,
-  Plus,
-} from "lucide-react";
-import { Photo } from "@/components/ui/photo";
-import type { PhotoName } from "@/lib/photos";
+import { CategoryTiles } from "@/components/ui/category-tiles";
+import { CtaBanner } from "@/components/ui/cta-banner";
+import { PageHero, onDarkOutline } from "@/components/ui/page-hero";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { businessConfig } from "@/lib/config";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Custom Framing",
   description: "Affordable custom framing in Orange County, CA that delivers nationwide. We frame art, photos, jerseys, diplomas, mirrors & more. Budget-friendly options with expert guidance.",
-};
-
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  shirt: Shirt,
-  square: Square,
-  scroll: ScrollText,
-  palette: Palette,
-  image: ImageLucide,
-  camera: Camera,
-  frame: Frame,
-  scissors: Scissors,
-  box: Box,
-  plus: Plus,
-};
-
-const cardImages: Partial<Record<string, { name: PhotoName; alt: string }>> = {
-  jerseys: { name: "jersey", alt: "Framed jersey" },
-  mirrors: { name: "mirror", alt: "Framed mirror" },
-  diplomas: { name: "diploma", alt: "Framed diploma and certificates" },
-  "fine-art": { name: "fine-art", alt: "Framed fine art" },
-  posters: { name: "poster", alt: "Framed posters and prints" },
-  photos: { name: "photo", alt: "Framed photos" },
-  canvas: { name: "canvas-stretching", alt: "Stretched canvas" },
-  needlework: { name: "needlework", alt: "Framed needlework and textiles" },
-  shadowboxes: { name: "memorabilia", alt: "Shadowbox memorabilia display" },
-  medals: { name: "medals", alt: "Framed medals and awards" },
 };
 
 const framingOptions = [
@@ -125,240 +81,163 @@ const processSteps = [
   },
 ];
 
+const heroLede =
+  "From precious artwork to sports memorabilia, we provide expert framing at prices that won't break the bank. Visit our shop or get a fast quote online.";
+const optionsLede = "Custom framing means choices. Here's what goes into creating the perfect frame.";
+const budgetLede =
+  "Tell us your budget and we'll create options that work. No pressure, no upselling — just honest guidance to help you get the best value for your money.";
+const budgetPromises = ["Budget-friendly options", "No hidden fees", "Transparent pricing"];
+
+/** A titled point with an icon: used for the framing options and the specialty services. */
+function Feature({
+  icon: Icon,
+  title,
+  description,
+  className,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  className?: string;
+}) {
+  return (
+    <li className={cn("reveal flex gap-4 rounded-xl border p-6", className)}>
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/40 text-primary">
+        <Icon className="size-5" aria-hidden="true" />
+      </span>
+      <div>
+        <h3 className="font-heading text-lg font-semibold leading-snug">{title}</h3>
+        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+      </div>
+    </li>
+  );
+}
+
 export default function CustomFramingPage() {
   return (
     <>
-      {/* Hero */}
-      <section className="py-16 lg:py-24 bg-gradient-to-b from-stone-100 to-background">
-        <div className="container-wide">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-heading font-semibold mb-6">
-              Affordable custom framing — we frame it all
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              From precious artwork to sports memorabilia, we provide expert framing at prices that won't break the bank. 
-              Visit our shop or get a fast quote online.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg">
-                <Link href="/quote">Get a Fast Quote</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="/contact">Visit the Shop</Link>
-              </Button>
-            </div>
-          </div>
+      <PageHero title="Affordable custom framing — we frame it all" lede={heroLede}>
+        <div className="grid gap-3 sm:flex sm:justify-center sm:gap-4">
+          <Button asChild size="lg" className="h-12 px-7 text-base">
+            <Link href="/quote">Get a Fast Quote</Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className={cn("h-12 px-7 text-base", onDarkOutline)}>
+            <Link href="/contact">Visit the Shop</Link>
+          </Button>
         </div>
-      </section>
+      </PageHero>
 
-      {/* What We Frame */}
-      <section className="py-16 lg:py-20 bg-background">
+      {/* What we frame */}
+      <section className="bg-background py-16 lg:py-24">
         <div className="container-wide">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-4">
-              We Frame It All
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              No matter what you need framed, we have the expertise and materials to do it beautifully.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {framingCategories.map((category) => {
-              const Icon = iconMap[category.icon] || Frame;
-              const cardImage = cardImages[category.id];
-              const isJersey = category.id === "jerseys";
-              return (
-                <Link
-                  key={category.id}
-                  href={`/what-we-frame#${category.id}`}
-                  className={`group flex flex-col min-h-[300px] sm:min-h-[330px] lg:min-h-[360px] rounded-xl border border-border hover:border-primary/50 hover:shadow-md transition-all bg-white ${
-                    cardImage ? "overflow-hidden" : "items-center justify-center p-6"
-                  }`}
-                >
-                  {cardImage ? (
-                    <>
-                      <div className="w-full min-h-[300px] sm:min-h-[330px] lg:min-h-[360px] bg-stone-100 overflow-hidden">
-                        <Photo
-                          name={cardImage.name}
-                          alt={cardImage.alt}
-                          sizes="(min-width: 1400px) 260px, (min-width: 1024px) 20vw, (min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
-                          className={isJersey ? "h-full w-full object-contain" : "h-full w-full object-cover"}
-                        />
-                      </div>
-                      <div className="flex flex-1 items-center justify-center p-4">
-                        <span className="text-sm font-medium text-center text-foreground group-hover:text-primary transition-colors">
-                          {category.name}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex flex-col items-center">
-                      <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors overflow-hidden">
-                        <Icon className="w-7 h-7 text-primary" />
-                      </div>
-                      <span className="text-sm font-medium text-center text-foreground group-hover:text-primary transition-colors">
-                        {category.name}
-                      </span>
-                    </div>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-
-          <div className="text-center mt-8">
+          <SectionHeading
+            title="We Frame It All"
+            lede="No matter what you need framed, we have the expertise and materials to do it beautifully."
+          />
+          <CategoryTiles className="mt-12" />
+          <p className="reveal mt-10 text-center">
             <Link
               href="/what-we-frame"
-              className="text-primary font-medium hover:underline inline-flex items-center gap-1"
+              className="inline-flex items-center gap-1 font-medium text-primary underline-offset-4 hover:underline"
             >
-              See full list <ArrowRight className="w-4 h-4" />
+              See full list <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
+          </p>
         </div>
       </section>
 
-      {/* Framing Options Explained */}
-      <section className="py-16 lg:py-20 bg-stone-50">
+      {/* Framing options explained */}
+      <section className="bg-sand py-16 lg:py-24">
         <div className="container-wide">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-4">
-              Your Framing Options
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Custom framing means choices. Here's what goes into creating the perfect frame.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <SectionHeading title="Your Framing Options" lede={optionsLede} />
+          <ul className="mx-auto mt-12 grid max-w-4xl gap-5 md:grid-cols-2">
             {framingOptions.map((option) => (
-              <Card key={option.title}>
-                <CardContent className="p-6 flex gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <option.icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">{option.title}</h3>
-                    <p className="text-sm text-muted-foreground">{option.description}</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <Feature key={option.title} {...option} className="border-primary/10 bg-white/70" />
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
-      {/* Budget Promise */}
-      <section className="py-16 lg:py-20 bg-primary text-white">
-        <div className="container-wide">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-6">
-              We'll design to your budget.
-            </h2>
-            <p className="text-xl text-white/80 mb-8">
-              Tell us your budget and we'll create options that work. No pressure, no upselling — 
-              just honest guidance to help you get the best value for your money.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Badge variant="secondary" className="bg-white/20 text-white px-4 py-2">
-                <Check className="w-4 h-4 mr-2" />
-                Budget-friendly options
-              </Badge>
-              <Badge variant="secondary" className="bg-white/20 text-white px-4 py-2">
-                <Check className="w-4 h-4 mr-2" />
-                No hidden fees
-              </Badge>
-              <Badge variant="secondary" className="bg-white/20 text-white px-4 py-2">
-                <Check className="w-4 h-4 mr-2" />
-                Transparent pricing
-              </Badge>
-            </div>
-          </div>
+      {/* Budget promise */}
+      <section className="relative isolate overflow-hidden bg-[#151311] py-16 text-stone-50 lg:py-24">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_80%_at_50%_50%,rgba(96,88,80,0.3),transparent_72%)]"
+        />
+        <div className="reveal container-wide text-center">
+          <span aria-hidden="true" className="mx-auto mb-6 block h-0.5 w-10 rounded-full bg-brand" />
+          <h2 className="mx-auto max-w-3xl font-heading text-3xl font-semibold leading-[1.12] tracking-tight md:text-4xl lg:text-5xl">
+            We&apos;ll design to <span className="italic text-[#e3cdb2]">your budget.</span>
+          </h2>
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-stone-300 md:text-xl">{budgetLede}</p>
+          <ul className="mt-8 flex flex-wrap justify-center gap-2.5">
+            {budgetPromises.map((promise) => (
+              <li
+                key={promise}
+                className="flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-stone-200"
+              >
+                <Check className="mr-2 h-4 w-4 text-[#e3cdb2]" aria-hidden="true" />
+                {promise}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      {/* Specialty Services */}
-      <section className="py-16 lg:py-20 bg-background">
+      {/* Specialty services */}
+      <section className="bg-background py-16 lg:py-24">
         <div className="container-wide">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-4">
-              Specialty Services
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Beyond standard framing, we offer specialized services for unique needs.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <SectionHeading
+            title="Specialty Services"
+            lede="Beyond standard framing, we offer specialized services for unique needs."
+          />
+          <ul className="mx-auto mt-12 grid max-w-4xl gap-5 md:grid-cols-2">
             {specialtyServices.map((service) => (
-              <Card key={service.title}>
-                <CardContent className="p-6 flex gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <service.icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">{service.title}</h3>
-                    <p className="text-sm text-muted-foreground">{service.description}</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <Feature key={service.title} {...service} className="border-border bg-white" />
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="py-16 lg:py-20 bg-stone-50">
+      {/* How it works */}
+      <section className="bg-sand py-16 lg:py-24">
         <div className="container-wide">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-4">
-              How It Works
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <SectionHeading title="How It Works" />
+          <ol className="mx-auto mt-12 grid max-w-4xl gap-10 md:grid-cols-3 md:gap-8">
             {processSteps.map((step) => (
-              <div key={step.number} className="text-center">
-                <div className="relative w-20 h-20 mx-auto mb-4">
-                  <div className="w-full h-full rounded-full bg-primary/10 flex items-center justify-center">
-                    <step.icon className="w-8 h-8 text-primary" />
-                  </div>
-                  <span className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-primary text-white text-sm font-bold flex items-center justify-center">
-                    {step.number}
-                  </span>
-                </div>
-                <h3 className="font-semibold mb-2">{step.title}</h3>
-                <p className="text-sm text-muted-foreground">{step.description}</p>
-              </div>
+              <li key={step.number} className="reveal text-center">
+                <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary text-white">
+                  <step.icon className="size-6" aria-hidden="true" />
+                </span>
+                <p className="mt-5 text-xs font-medium uppercase tracking-[0.14em] text-primary">Step {step.number}</p>
+                <h3 className="mt-1 font-heading text-lg font-semibold">{step.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{step.description}</p>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-16 lg:py-20 bg-background">
-        <div className="container-wide">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-6">
-              Ready to get started?
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              Get a fast quote online or visit our Orange County, CA shop for a free consultation.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg">
-                <Link href="/quote">Get a Fast Quote</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link href="/contact">Visit the Shop</Link>
-              </Button>
-            </div>
-            <p className="mt-6 text-sm text-muted-foreground">
-              {businessConfig.address.full} • {businessConfig.hours.display}
-            </p>
-          </div>
-        </div>
-      </section>
+      <CtaBanner
+        title={
+          <>
+            Ready to get <span className="italic text-[#e3cdb2]">started?</span>
+          </>
+        }
+        lede="Get a fast quote online or visit our Orange County, CA shop for a free consultation."
+        footnote={
+          <>
+            {businessConfig.address.full} • {businessConfig.hours.display}
+          </>
+        }
+      >
+        <Button asChild size="lg" className="h-12 px-7 text-base">
+          <Link href="/quote">Get a Fast Quote</Link>
+        </Button>
+        <Button asChild variant="outline" size="lg" className={cn("h-12 px-7 text-base", onDarkOutline)}>
+          <Link href="/contact">Visit the Shop</Link>
+        </Button>
+      </CtaBanner>
     </>
   );
 }
