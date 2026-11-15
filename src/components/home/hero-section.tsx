@@ -20,12 +20,13 @@ export function HeroSection() {
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_90%_55%_at_50%_38%,rgba(96,88,80,0.34),transparent_72%)] lg:bg-[radial-gradient(ellipse_48%_78%_at_73%_50%,rgba(96,88,80,0.34),transparent_72%)]"
       />
 
-      <div className={cn(styles.grid, "container-wide pt-6 pb-10 sm:pt-10 lg:py-6")}>
+      <div className={cn(styles.grid, "container-wide pt-4 pb-10 sm:pt-10 lg:py-6")}>
         <h1
           className={cn(
             styles.title,
             // On desktop the size follows the column width, so each half of the headline stays on two lines.
-            "text-center font-heading text-[2rem] font-semibold leading-[1.12] tracking-tight text-stone-50 sm:text-5xl lg:text-left lg:text-[clamp(2.6rem,3.9vw,3.75rem)]",
+            // On phones it is sized and balanced to take three lines, which keeps the buttons on the first screen.
+            "text-balance text-center font-heading text-[1.75rem] font-semibold leading-[1.12] tracking-tight text-stone-50 sm:text-5xl lg:text-left lg:text-[clamp(2.6rem,3.9vw,3.75rem)]",
           )}
         >
           Custom framing that looks <span className="whitespace-nowrap">high-end —</span>{" "}

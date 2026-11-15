@@ -78,7 +78,7 @@ export function Header() {
               <SheetContent side="right" className="w-[300px] sm:w-[350px]">
                 {/* Screen readers announce the panel by this title; it is not shown. */}
                 <SheetTitle className="sr-only">Menu</SheetTitle>
-                <div className="flex flex-col gap-6 mt-6">
+                <div className="flex flex-col gap-6 px-5 pb-6 pt-6">
                   <Link
                     href="/"
                     className="flex items-center"
