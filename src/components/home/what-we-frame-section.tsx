@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Photo } from "@/components/ui/photo";
 import { framingCategories } from "@/lib/config";
+import { cn } from "@/lib/utils";
 import type { PhotoName } from "@/lib/photos";
 import { SectionHeading } from "./section-heading";
 
@@ -35,10 +36,15 @@ export function WhatWeFrameSection() {
           {framingCategories.map((category) => {
             const cardImage = cardImages[category.id];
             return (
-              <li key={category.id} className="reveal">
+              // With three columns the tenth tile would sit alone on its row, so there the
+              // "and more" tile becomes a strip across all three.
+              <li key={category.id} className={cn("reveal", !cardImage && "sm:max-lg:col-span-3")}>
                 <Link
                   href={`/what-we-frame#${category.id}`}
-                  className="group relative block aspect-[2/3] overflow-hidden rounded-xl bg-stone-200 shadow-sm transition-shadow duration-300 hover:shadow-lg"
+                  className={cn(
+                    "group relative block aspect-[2/3] overflow-hidden rounded-xl bg-stone-200 shadow-sm transition-shadow duration-300 hover:shadow-lg",
+                    !cardImage && "sm:max-lg:aspect-auto sm:max-lg:h-28",
+                  )}
                 >
                   {cardImage ? (
                     <>
@@ -55,7 +61,7 @@ export function WhatWeFrameSection() {
                       </span>
                     </>
                   ) : (
-                    <span className="flex h-full flex-col items-center justify-center gap-4 bg-[#151311] p-4 text-center">
+                    <span className="flex h-full flex-col items-center justify-center gap-4 bg-[#151311] p-4 text-center sm:max-lg:flex-row sm:max-lg:gap-5">
                       <span className="flex size-12 items-center justify-center rounded-full border border-brand/60 text-brand transition-colors duration-300 group-hover:bg-brand group-hover:text-[#151311]">
                         <Plus className="size-5" aria-hidden="true" />
                       </span>
