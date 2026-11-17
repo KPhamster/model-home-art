@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 import { businessConfig } from "@/lib/config";
+import { checkForSpam, heldLabel, suspectPrefix } from "@/lib/spam-filter";
 
 // App Router config: Allow longer processing time for large uploads
 export const maxDuration = 60;
@@ -326,7 +327,18 @@ export async function POST(request: NextRequest) {
     (_, i) => `[image-${i + 1}-attached-to-email]`
   );
 
-  // Save to database
+  const spam = await checkForSpam("business enquiry form", {
+    businessName: body.businessName,
+    contactName: body.contactName,
+    projectDescription: body.projectDescription,
+    sizesInfo: body.sizesInfo,
+    timeline: body.timeline,
+    deliveryNeeds: body.deliveryNeeds,
+  });
+  const held = spam.status === "spam";
+
+  // Save to database. A held enquiry is saved too (marked SPAM, with a note saying why),
+  // so a wrongly held one can still be found.
   let inquiry;
   try {
     inquiry = await prisma.businessInquiry.create({
@@ -340,7 +352,8 @@ export async function POST(request: NextRequest) {
         images: imagePlaceholders,
         timeline: body.timeline || null,
         deliveryNeeds: body.deliveryNeeds || null,
-        status: "NEW",
+        status: held ? "SPAM" : "NEW",
+        notes: held ? `${heldLabel(spam)} by the automatic filter. No emails were sent.` : null,
       },
     });
   } catch (dbError: any) {
@@ -349,6 +362,11 @@ export async function POST(request: NextRequest) {
       { error: "Failed to save inquiry" },
       { status: 500 }
     );
+  }
+
+  // Held as spam: nobody is emailed. The sender gets the same reply as anyone else.
+  if (held) {
+    return NextResponse.json({ success: true, id: inquiry.id });
   }
 
   // Send emails
@@ -384,17 +402,20 @@ export async function POST(request: NextRequest) {
 
     const imageLink = body.imageLink || undefined;
 
-    // Customer confirmation email
-    try {
-      await resend.emails.send({
-        from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
-        to: body.email,
-        subject: `Thanks for your inquiry, ${body.contactName}! — Model Home Art`,
-        html: generateCustomerEmailHtml(body, imageAttachments.length, imageLink),
-        attachments: resendAttachments.length > 0 ? resendAttachments : undefined,
-      });
-    } catch (customerEmailError) {
-      console.error("Error sending customer email:", customerEmailError);
+    // Customer confirmation email. Skipped when the filter was unsure, because the
+    // address on a spam enquiry is often not the sender's own.
+    if (spam.status !== "suspect") {
+      try {
+        await resend.emails.send({
+          from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
+          to: body.email,
+          subject: `Thanks for your inquiry, ${body.contactName}! — Model Home Art`,
+          html: generateCustomerEmailHtml(body, imageAttachments.length, imageLink),
+          attachments: resendAttachments.length > 0 ? resendAttachments : undefined,
+        });
+      } catch (customerEmailError) {
+        console.error("Error sending customer email:", customerEmailError);
+      }
     }
 
     // Admin notification email
@@ -403,7 +424,7 @@ export async function POST(request: NextRequest) {
         await resend.emails.send({
           from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
           to: process.env.ADMIN_EMAIL,
-          subject: `🏢 Business Inquiry: ${body.businessName}`,
+          subject: `${suspectPrefix(spam)}🏢 Business Inquiry: ${body.businessName}`,
           html: generateAdminEmailHtml(body, imageAttachments.length, imageLink),
           attachments: resendAttachments.length > 0 ? resendAttachments : undefined,
           replyTo: body.email,

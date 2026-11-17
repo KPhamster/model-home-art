@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 import { quoteOptions, businessConfig } from "@/lib/config";
+import { checkForSpam, heldLabel, suspectPrefix } from "@/lib/spam-filter";
 
 // App Router config: Allow longer processing time for large uploads
 export const maxDuration = 60;
@@ -518,9 +519,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const spam = await checkForSpam("quote request form", {
+    name: body.name,
+    category: body.category,
+    description: body.description,
+    repairNotes: body.repairNotes,
+    imageLink: body.imageLink,
+  });
+  const held = spam.status === "spam";
+
   let quote;
   
-  // Save to database
+  // Save to database. A held request is saved too (closed, with a note saying why), so a
+  // wrongly held one can still be found.
   // Note: We don't store full images in the database (too large)
   // Images are sent via email attachments instead
   // Store a placeholder to indicate how many images were uploaded
@@ -553,7 +564,8 @@ export async function POST(request: NextRequest) {
         email: body.email,
         phone: body.phone || null,
         preferredContact: body.preferredContact || null,
-        status: "NEW",
+        status: held ? "CLOSED" : "NEW",
+        notes: held ? `${heldLabel(spam)} by the automatic filter. No emails were sent.` : null,
       },
     });
   } catch (dbError: any) {
@@ -569,6 +581,11 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
+  }
+
+  // Held as spam: nobody is emailed or notified. The sender gets the same reply as anyone else.
+  if (held) {
+    return NextResponse.json({ success: true, id: quote.id });
   }
 
   // Send emails (non-blocking - don't fail the request if email fails)
@@ -612,18 +629,21 @@ export async function POST(request: NextRequest) {
       // Get image link if provided
       const imageLink = body.imageLink || undefined;
 
-      // Customer confirmation email
-      try {
-        await resend.emails.send({
-          from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
-          to: body.email,
-          subject: `Thanks for your quote request, ${body.name}! — Model Home Art`,
-          html: generateCustomerEmailHtml(body, imageAttachments.length, imageLink),
-          attachments: resendAttachments.length > 0 ? resendAttachments : undefined,
-        });
-      } catch (customerEmailError) {
-        console.error("Error sending customer email:", customerEmailError);
-        // Continue - don't fail the request
+      // Customer confirmation email. Skipped when the filter was unsure, because the
+      // address on a spam request is often not the sender's own.
+      if (spam.status !== "suspect") {
+        try {
+          await resend.emails.send({
+            from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
+            to: body.email,
+            subject: `Thanks for your quote request, ${body.name}! — Model Home Art`,
+            html: generateCustomerEmailHtml(body, imageAttachments.length, imageLink),
+            attachments: resendAttachments.length > 0 ? resendAttachments : undefined,
+          });
+        } catch (customerEmailError) {
+          console.error("Error sending customer email:", customerEmailError);
+          // Continue - don't fail the request
+        }
       }
 
       // Admin notification email
@@ -632,7 +652,7 @@ export async function POST(request: NextRequest) {
           await resend.emails.send({
             from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
             to: process.env.ADMIN_EMAIL,
-            subject: `🖼️ New Quote: ${capitalize(body.category)} from ${body.name} (${getLabel(quoteOptions.budget, body.budgetRange)})`,
+            subject: `${suspectPrefix(spam)}🖼️ New Quote: ${capitalize(body.category)} from ${body.name} (${getLabel(quoteOptions.budget, body.budgetRange)})`,
             html: generateAdminEmailHtml(body, quote.id, imageAttachments.length, imageLink),
             attachments: resendAttachments.length > 0 ? resendAttachments : undefined,
           });
