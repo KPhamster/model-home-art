@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 import { businessConfig } from "@/lib/config";
+import { checkForSpam, heldLabel, suspectPrefix } from "@/lib/spam-filter";
 
 // Lazy initialization to avoid build-time errors
 const getResend = () => new Resend(process.env.RESEND_API_KEY);
@@ -166,32 +167,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save to database
+    const spam = await checkForSpam("contact form", {
+      name: body.name,
+      subject: body.subject,
+      message: body.message,
+    });
+    const held = spam.status === "spam";
+
+    // Save to database. A held message is saved too, labelled in its subject, so a
+    // wrongly held one can still be found.
     const submission = await prisma.contactSubmission.create({
       data: {
         name: body.name,
         email: body.email,
         phone: body.phone || null,
-        subject: body.subject || null,
+        subject: held ? `[${heldLabel(spam)}] ${body.subject || ""}`.trim() : body.subject || null,
         message: body.message,
       },
     });
+
+    // Held as spam: nobody is emailed. The sender gets the same reply as anyone else.
+    if (held) {
+      return NextResponse.json({ success: true, id: submission.id });
+    }
 
     // Send emails
     if (process.env.RESEND_API_KEY) {
       const resend = getResend();
 
-      // Customer confirmation email
-      try {
-        await resend.emails.send({
-          from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
-          to: body.email,
-          subject: `Thanks for your message, ${body.name}! — Model Home Art`,
-          html: generateCustomerEmailHtml(body),
-        });
-      } catch (customerEmailError) {
-        console.error("Error sending customer email:", customerEmailError);
-        // Continue - don't fail the request
+      // Customer confirmation email. Skipped when the filter was unsure, because the
+      // address on a spam message is often not the sender's own.
+      if (spam.status !== "suspect") {
+        try {
+          await resend.emails.send({
+            from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
+            to: body.email,
+            subject: `Thanks for your message, ${body.name}! — Model Home Art`,
+            html: generateCustomerEmailHtml(body),
+          });
+        } catch (customerEmailError) {
+          console.error("Error sending customer email:", customerEmailError);
+          // Continue - don't fail the request
+        }
       }
 
       // Admin notification email
@@ -200,7 +217,7 @@ export async function POST(request: NextRequest) {
           await resend.emails.send({
             from: process.env.EMAIL_FROM || "Model Home Art <hello@modelhomeart.com>",
             to: process.env.ADMIN_EMAIL,
-            subject: `📬 Contact: ${body.subject || "New message"} from ${body.name}`,
+            subject: `${suspectPrefix(spam)}📬 Contact: ${body.subject || "New message"} from ${body.name}`,
             html: generateAdminEmailHtml(body),
             replyTo: body.email,
           });
