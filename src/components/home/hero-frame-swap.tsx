@@ -7,14 +7,14 @@ import { heroBaseFrame, heroFrameWidths, heroOverlayFrames } from "./hero-frames
 import styles from "./hero-section.module.css";
 
 /** How many times the frame changes each second. */
-const SWAPS_PER_SECOND = 3;
+const SWAPS_PER_SECOND = 1;
 const FRAME_COUNT = heroOverlayFrames.length + 1;
 /**
  * Tells the browser which file size to fetch. Desktop is the real drawn width. Phones and
- * tablets are deliberately under-reported (the picture is drawn at 118vw / 44rem) so that
+ * tablets are deliberately under-reported (the picture is drawn at 104vw / 44rem) so that
  * high-density screens take the 768 and 1280 px sets instead of the largest one: the whole
- * loop then costs under 1 MB on a phone, and the frames change too fast for the softer
- * picture to show.
+ * loop then costs under 1 MB on a phone, and at that size the softer picture still looks
+ * sharp while a frame is held for a second.
  */
 const SIZES = "(min-width: 1024px) min(60vw, 88vh), (min-width: 640px) 36rem, 59vw";
 
