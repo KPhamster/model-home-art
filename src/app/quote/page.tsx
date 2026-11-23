@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { quoteOptions, businessConfig } from "@/lib/config";
+import { quoteOptions, quoteCategoryForFramingId, businessConfig } from "@/lib/config";
 import { DEFAULT_FRAME, FRAME_FOR_STYLE, FrameCorner, FramePreview, GLARE } from "@/components/quote/frame-preview";
 import type { QuoteFrameId } from "@/components/quote/quote-frames";
 import type { PhotoName } from "@/lib/photos";
@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, ArrowRight, Upload, X, Check, Camera,
   Ruler, Palette, Clock, User, CheckCircle, CircleHelp,
-  Shapes, Store, Truck, Package, Hammer, type LucideIcon
+  Shapes, Store, Truck, Package, Hammer, ChevronDown, type LucideIcon
 } from "lucide-react";
 
 const steps = [
@@ -70,7 +70,26 @@ const CATEGORY_PHOTO: Partial<Record<string, PhotoName>> = {
   "canvas": "canvas-stretching",
   "needlework/textile": "needlework",
   "shadowbox/memorabilia": "memorabilia",
+  "medals/awards": "medals",
+  "vinyl/album art": "album",
+  "baby keepsake": "baby-keepsake",
+  "wedding": "wedding",
+  "military": "military",
+  "sports equipment": "sports",
+  "document": "document",
+  "map/blueprint": "map",
+  "flag/banner": "flags",
 };
+
+// The categories as the form lays them out: the main ones, the ones behind "More", and "Other".
+const MAIN_CATEGORIES = quoteOptions.categories.slice(0, quoteOptions.mainCategoryCount);
+const MORE_CATEGORIES = quoteOptions.categories.slice(quoteOptions.mainCategoryCount, -1);
+const OTHER_CATEGORY = quoteOptions.categories[quoteOptions.categories.length - 1];
+
+// The kind named in the page's address (/quote?category=flags), as a What We Frame page button
+// leaves it. Read this way it is absent on the server and during hydration, then appears.
+const noSubscription = () => () => {};
+const framingIdInAddress = () => new URLSearchParams(window.location.search).get("category");
 
 /** The icon for each way of getting the finished piece to the customer. */
 const SERVICE_ICON: Partial<Record<string, LucideIcon>> = {
@@ -184,6 +203,17 @@ export default function QuotePage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // The category in force: the visitor's own choice, or failing that the one a What We Frame
+  // page button asked for. Anything else in the address is ignored.
+  const linkedId = useSyncExternalStore(noSubscription, framingIdInAddress, () => null);
+  const linkedCategory = linkedId && Object.hasOwn(quoteCategoryForFramingId, linkedId) ? quoteCategoryForFramingId[linkedId].toLowerCase() : "";
+  const category = formData.category || linkedCategory;
+  // The less common categories stay folded away unless asked for, or unless one of them is chosen.
+  const [moreCategoriesOpen, setMoreCategoriesOpen] = useState(false);
+  const moreCategoryChosen = MORE_CATEGORIES.some((cat) => cat.toLowerCase() === category);
+  const shownCategories =
+    moreCategoriesOpen || moreCategoryChosen ? quoteOptions.categories : [...MAIN_CATEGORIES, OTHER_CATEGORY];
+
   // The photo framed in the preview and in the Style step's tiles. It is the one the visitor
   // picked or added last; if that one has been removed, their first.
   const [chosenPhoto, setChosenPhoto] = useState<File | null>(null);
@@ -232,7 +262,7 @@ export default function QuotePage() {
   const validateStep = () => {
     switch (currentStep) {
       case 1:
-        if (!formData.category) {
+        if (!category) {
           toast.error("Please select a category");
           return false;
         }
@@ -333,7 +363,7 @@ export default function QuotePage() {
       
       // Add all form fields as JSON
       const formFields = {
-        category: formData.category,
+        category,
         description: formData.description,
         width: formData.width,
         height: formData.height,
@@ -528,16 +558,16 @@ export default function QuotePage() {
                   <Label id="category-label">Category *</Label>
                   <RadioGroup
                     aria-labelledby="category-label"
-                    value={formData.category}
+                    value={category}
                     onValueChange={(value) => updateField("category", value)}
                     className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 xl:grid-cols-5"
                   >
                     {/* A photo of that kind of piece, framed; "Other" gets a symbol instead. */}
-                    {quoteOptions.categories.map((cat) => {
+                    {shownCategories.map((cat) => {
                       const value = cat.toLowerCase();
                       const photo = CATEGORY_PHOTO[value];
                       return (
-                        <PictureOption key={cat} value={value} label={cat} selected={formData.category === value} small>
+                        <PictureOption key={cat} value={value} label={cat} selected={category === value} small>
                           {photo ? (
                             <Photo
                               name={photo}
@@ -554,6 +584,18 @@ export default function QuotePage() {
                       );
                     })}
                   </RadioGroup>
+                  {/* Hidden while one of the extra categories is chosen, since folding would hide the choice. */}
+                  {!moreCategoryChosen && (
+                    <button
+                      type="button"
+                      aria-expanded={moreCategoriesOpen}
+                      onClick={() => setMoreCategoriesOpen((open) => !open)}
+                      className="mx-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-primary outline-offset-2 transition-colors hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary"
+                    >
+                      {moreCategoriesOpen ? "Show fewer" : `More kinds (${MORE_CATEGORIES.length})`}
+                      <ChevronDown aria-hidden="true" className={`size-4 transition-transform ${moreCategoriesOpen ? "rotate-180" : ""}`} />
+                    </button>
+                  )}
                 </div>
 
                 <div className="space-y-2">
