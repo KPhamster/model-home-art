@@ -404,7 +404,7 @@ export default function QuotePage() {
       {/* Phones: progress, preview, form in one column. Desktop: the preview stays beside the form,
           wider on wider screens. The second row takes any height the preview adds, so the
           progress bar stays snug against the form. */}
-      <div className="container-wide max-w-3xl! lg:grid lg:max-w-6xl! lg:grid-cols-[minmax(0,1fr)_24rem] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-10 xl:max-w-7xl! xl:grid-cols-[minmax(0,1fr)_30rem] 2xl:max-w-[1400px]! 2xl:grid-cols-[minmax(0,1fr)_34rem]">
+      <div className="container-wide max-w-3xl! lg:grid lg:max-w-6xl! lg:grid-cols-[minmax(0,1fr)_24rem] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-10 xl:max-w-7xl! xl:grid-cols-[minmax(0,1fr)_34rem] 2xl:max-w-[1400px]! 2xl:grid-cols-[minmax(0,1fr)_40rem]">
 
         {/* Progress */}
         <div className="mb-8 lg:col-start-1">
@@ -445,7 +445,7 @@ export default function QuotePage() {
         {/* Live preview. On a phone it stays in view through the Style step, where every answer
             changes it, and steps aside for the last two steps, which do not. */}
         <div
-          className={`z-20 mb-4 bg-sand lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mb-0 ${
+          className={`z-20 mb-4 bg-sand lg:sticky lg:top-20 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mb-0 ${
             currentStep === 3 ? "max-lg:sticky max-lg:top-16 max-lg:-mt-2 max-lg:py-2" : currentStep > 3 ? "max-lg:hidden" : ""
           }`}
         >
