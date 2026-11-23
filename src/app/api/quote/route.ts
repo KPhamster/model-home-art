@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { Resend } from "resend";
 import { quoteOptions, businessConfig } from "@/lib/config";
 import { checkForSpam, heldLabel, suspectPrefix } from "@/lib/spam-filter";
+import { quoteFrames } from "@/components/quote/quote-frames";
 
 // App Router config: Allow longer processing time for large uploads
 export const maxDuration = 60;
@@ -15,6 +16,11 @@ const getLabel = (options: readonly { value: string; label: string }[], value: s
   const found = options.find((opt) => opt.value === value);
   return found ? found.label : value || "Not specified";
 };
+
+// The frame the visitor picked in the form's live preview, by name. Only a frame from the
+// site's own list counts, so nothing typed into the request can end up in an email.
+const pickedFrameLabel = (value: unknown): string | null =>
+  quoteFrames.find((frame) => frame.id === value)?.label ?? null;
 
 // Helper to capitalize first letter
 const capitalize = (str: string): string => {
@@ -400,6 +406,10 @@ const generateAdminEmailHtml = (body: any, quoteId: string, imageCount: number, 
                     <td style="padding: 4px 0; color: #78716c; font-size: 13px;">Frame Style:</td>
                     <td style="padding: 4px 0; color: #292524; font-size: 13px; font-weight: 600; text-align: right;">${getLabel(quoteOptions.styles, body.stylePreference)}</td>
                   </tr>
+                  ${pickedFrameLabel(body.previewFrame) ? `<tr>
+                    <td style="padding: 4px 0; color: #78716c; font-size: 13px;">Picked in preview:</td>
+                    <td style="padding: 4px 0; color: #292524; font-size: 13px; font-weight: 600; text-align: right;">${pickedFrameLabel(body.previewFrame)} frame</td>
+                  </tr>` : ""}
                   <tr>
                     <td style="padding: 4px 0; color: #78716c; font-size: 13px;">Matting:</td>
                     <td style="padding: 4px 0; color: #292524; font-size: 13px; font-weight: 600; text-align: right;">${getLabel(quoteOptions.matting, body.matting)}</td>
@@ -527,6 +537,7 @@ export async function POST(request: NextRequest) {
     imageLink: body.imageLink,
   });
   const held = spam.status === "spam";
+  const pickedFrame = pickedFrameLabel(body.previewFrame);
 
   let quote;
   
@@ -565,7 +576,11 @@ export async function POST(request: NextRequest) {
         phone: body.phone || null,
         preferredContact: body.preferredContact || null,
         status: held ? "CLOSED" : "NEW",
-        notes: held ? `${heldLabel(spam)} by the automatic filter. No emails were sent.` : null,
+        notes: held
+          ? `${heldLabel(spam)} by the automatic filter. No emails were sent.`
+          : pickedFrame
+            ? `Frame picked in the live preview: ${pickedFrame}.`
+            : null,
       },
     });
   } catch (dbError: any) {

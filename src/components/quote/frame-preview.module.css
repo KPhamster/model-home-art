@@ -1,0 +1,118 @@
+/*
+ * The quote form's live frame preview.
+ *
+ * Everything inside the stage is sized in inches. The component sets the picture's size, the
+ * mat and the moulding as plain numbers (--total-w, --mat, --moulding ...), and --u turns an
+ * inch into pixels so that the whole framed picture just fits the stage. Changing a number
+ * therefore redraws the picture in proportion, and the transitions make it grow or shrink
+ * instead of jumping.
+ */
+
+.stage {
+  container-type: size;
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  /* A plastered gallery wall, lit from above. Mid-toned so both the white and the black frame show. */
+  background:
+    radial-gradient(110% 80% at 50% 12%, rgb(255 248 235 / 0.6), transparent 65%),
+    linear-gradient(#cbc0af, #a99c89);
+}
+
+.frame {
+  --u: min(calc(84cqw / var(--total-w)), calc(84cqh / var(--total-h)));
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  box-sizing: border-box;
+  width: calc(var(--u) * var(--total-w));
+  height: calc(var(--u) * var(--total-h));
+  /* The moulding is a photo of a real frame, drawn as a border: corners keep their shape, sides stretch. */
+  border-style: solid;
+  border-color: transparent;
+  border-width: max(calc(var(--u) * var(--moulding)), 5px);
+  border-image-repeat: stretch;
+  box-shadow:
+    0 1.1rem 1.6rem -0.5rem rgb(40 28 16 / 0.5),
+    0 0.3rem 0.5rem rgb(40 28 16 / 0.22);
+  transition:
+    width 0.45s var(--ease),
+    height 0.45s var(--ease),
+    border-width 0.45s var(--ease);
+}
+
+/* Whatever sits behind the glass: the mat, if there is one, and the picture. */
+.opening {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: calc(var(--u) * var(--mat));
+  background: #f6f2e9;
+  transition: padding 0.45s var(--ease);
+}
+
+/* The lower mat of a double mat, seen as a thin dark line round the picture. */
+.reveal {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: calc(var(--u) * var(--reveal));
+  background: #4b413a;
+  transition: padding 0.45s var(--ease);
+}
+
+.art {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #d8d0c3;
+}
+
+.art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A mat is cut at a slant, which shows as a pale line of its core round each window. */
+.opening[data-mat="single"] .art,
+.opening[data-mat="double"] .art,
+.opening[data-mat="double"] .reveal {
+  box-shadow:
+    0 0 0 1px #fffdf8,
+    0 0 0 2px rgb(60 45 30 / 0.12);
+}
+
+/* The shadow the moulding casts on whatever is behind it. */
+.lip {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0.2rem 0.45rem rgb(30 20 10 / 0.38),
+    inset 0 0 0.1rem rgb(30 20 10 / 0.5);
+}
+
+/* Reflection on the glass: plain glass shows one, non-glare glass a faint one, museum glass none. */
+.glass {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--glare);
+  background:
+    linear-gradient(112deg, transparent 28%, rgb(255 255 255 / 0.5) 40%, rgb(255 255 255 / 0.14) 47%, transparent 56%),
+    linear-gradient(112deg, transparent 62%, rgb(255 255 255 / 0.22) 68%, transparent 74%);
+  transition: opacity 0.45s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame,
+  .opening,
+  .reveal,
+  .glass {
+    transition: none;
+  }
+}

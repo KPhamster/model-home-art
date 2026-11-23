@@ -1,0 +1,244 @@
+"use client";
+
+import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties } from "react";
+import { ImagePlus } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { quoteFrames, quoteSampleArt, type QuoteFrame, type QuoteFrameId } from "./quote-frames";
+import styles from "./frame-preview.module.css";
+
+/** The frame shown before the visitor has chosen anything. */
+export const DEFAULT_FRAME: QuoteFrameId = "walnut";
+
+/** The frame a "Frame Style" answer brings up first. "Not sure" leaves the frame alone. */
+export const FRAME_FOR_STYLE: Partial<Record<string, QuoteFrameId>> = {
+  modern: "black",
+  classic: "walnut",
+  minimal: "natural",
+  ornate: "gold",
+};
+
+const frameById = (id: QuoteFrameId): QuoteFrame => quoteFrames.find((f) => f.id === id) ?? quoteFrames[0];
+const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
+const parseInches = (text: string) => {
+  const n = Number.parseFloat(text);
+  return Number.isFinite(n) && n > 0 && n <= 240 ? n : null;
+};
+const tidy = (n: number) => String(Math.round(n * 100) / 100);
+
+// One address per chosen file for as long as the page is open. They are never revoked: the
+// form keeps the files themselves until it is sent, so the addresses hold on to nothing extra.
+const photoUrls = new WeakMap<File, string>();
+function photoUrlFor(file: File) {
+  let url = photoUrls.get(file);
+  if (!url) {
+    url = URL.createObjectURL(file);
+    photoUrls.set(file, url);
+  }
+  return url;
+}
+
+/** Sizes, in inches, of everything the preview draws. */
+function measure(width: string, height: string, photoRatio: number | null, matting: string, mouldingInches: number) {
+  const typedW = parseInches(width);
+  const typedH = parseInches(height);
+  const typed = typedW !== null && typedH !== null;
+  // What the visitor typed; failing that, the shape of their photo (or the sample) with a 20 in long side.
+  const ratio = clamp(typed ? typedW / typedH : (photoRatio ?? quoteSampleArt.widthInches / quoteSampleArt.heightInches), 0.25, 4);
+  const long = typed ? Math.max(typedW, typedH) : 20;
+  const w = ratio >= 1 ? long : long * ratio;
+  const h = ratio >= 1 ? long / ratio : long;
+  const short = Math.min(w, h);
+
+  // Mats and mouldings come in real widths, so a small picture gets a visibly heavier surround.
+  const matted = matting === "single" || matting === "double" || matting === "not-sure";
+  const mat = matted ? clamp(short * 0.14, 1.5, 4) : 0;
+  const reveal = matting === "double" ? clamp(short * 0.02, 0.25, 0.5) : 0;
+  const moulding = Math.min(mouldingInches, short * 0.3);
+  const surround = 2 * (mat + reveal + moulding);
+  return { typed, typedW, typedH, mat, reveal, moulding, totalW: w + surround, totalH: h + surround };
+}
+
+const MAT_WORDS: Record<string, string> = {
+  none: "no mat",
+  single: "a single mat",
+  double: "a double mat",
+  "not-sure": "a single mat",
+};
+// How strong the reflection on the glass is drawn.
+const GLARE: Record<string, number> = { standard: 1, upgraded: 0.3 };
+
+type FramePreviewProps = {
+  /** The visitor's first photo, if they have added one. */
+  photo: File | null;
+  /** Width and height of the item in inches, as typed. */
+  width: string;
+  height: string;
+  /** The form's matting and glass answers ("" until chosen). */
+  matting: string;
+  protection: string;
+  frameId: QuoteFrameId;
+  onFrameChange: (id: QuoteFrameId) => void;
+  /** Lets the visitor add a photo from the preview itself; uses the form's own upload checks. */
+  onAddPhoto: (event: ChangeEvent<HTMLInputElement>) => void;
+  className?: string;
+};
+
+/**
+ * Shows the visitor's own photo (or a sample picture) on a wall, in a real frame, and redraws
+ * it as they answer the form: the frame they pick, the mat, the glass and the size. Below the
+ * "lg" breakpoint it lays itself out shorter, to leave a phone screen room for the form.
+ */
+export function FramePreview({ photo, width, height, matting, protection, frameId, onFrameChange, onAddPhoto, className }: FramePreviewProps) {
+  // The frame on screen. It follows frameId once that frame's photo has downloaded, so the
+  // picture never sits bare while one loads.
+  const [shownId, setShownId] = useState(frameId);
+  const [loaded, setLoaded] = useState<{ url: string; ratio: number } | null>(null);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const preloaded = useRef(false);
+
+  useEffect(() => {
+    if (frameId === shownId) return;
+    let stale = false;
+    const image = new Image();
+    image.src = frameById(frameId).image;
+    const show = () => {
+      if (!stale) setShownId(frameId);
+    };
+    image.decode().then(show, show);
+    return () => {
+      stale = true;
+    };
+  }, [frameId, shownId]);
+
+  // The other frames are fetched the first time the visitor reaches for the picker.
+  const preloadFrames = () => {
+    if (preloaded.current) return;
+    preloaded.current = true;
+    for (const frame of quoteFrames) new Image().src = frame.image;
+  };
+
+  const url = photo ? photoUrlFor(photo) : null;
+  // Some photo types (HEIC outside Safari, for one) cannot be drawn by the browser.
+  const photoShown = url !== null && url !== failedUrl;
+  const photoRatio = photoShown && loaded?.url === url ? loaded.ratio : null;
+
+  const frame = frameById(shownId);
+  const size = measure(width, height, photoRatio, matting, frame.inches);
+  const [top, right, bottom, left] = frame.slice;
+  const frameStyle = {
+    "--total-w": size.totalW,
+    "--total-h": size.totalH,
+    "--moulding": size.moulding,
+    "--mat": size.mat,
+    "--reveal": size.reveal,
+    "--glare": GLARE[protection] ?? 0,
+    borderImageSource: `url(${frame.image})`,
+    borderImageSlice: `${top}% ${right}% ${bottom}% ${left}%`,
+  } as CSSProperties;
+
+  const picture = photoShown ? "Your photo" : "Sample picture";
+  const matWords = MAT_WORDS[matting];
+  const sizeWords = size.typed ? `${tidy(size.typedW!)} × ${tidy(size.typedH!)} in` : null;
+  const article = /^[aeiou]/i.test(frame.label) ? "an" : "a";
+  const summary = `${picture} in ${article} ${frame.label.toLowerCase()} frame${matWords ? ` with ${matWords}` : ""}`;
+
+  return (
+    <div className={cn("rounded-2xl border border-border bg-white p-3 shadow-sm lg:p-4", className)}>
+      <div className="mb-3 hidden items-baseline justify-between gap-3 lg:flex">
+        <h2 className="font-heading text-xl font-semibold tracking-tight">See it framed</h2>
+        <span className="text-xs text-muted-foreground">Updates as you answer</span>
+      </div>
+
+      <div className="relative">
+        <div
+          role="img"
+          aria-label={`Preview: ${summary}${sizeWords ? `, ${sizeWords}` : ""}.`}
+          className={cn(styles.stage, "h-40 w-full rounded-xl lg:aspect-square lg:h-auto lg:max-h-[58svh]")}
+        >
+          <div className={styles.frame} style={frameStyle}>
+            <div className={styles.opening} data-mat={size.reveal > 0 ? "double" : size.mat > 0 ? "single" : "none"}>
+              <div className={styles.reveal}>
+                <div className={styles.art}>
+                  {photoShown ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- a local file the visitor just chose
+                    <img
+                      key={url}
+                      src={url}
+                      alt=""
+                      onLoad={(e) => setLoaded({ url, ratio: e.currentTarget.naturalWidth / e.currentTarget.naturalHeight })}
+                      onError={() => setFailedUrl(url)}
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element -- pre-sized files, see scripts/build-quote-frames.mjs
+                    <img src={quoteSampleArt.src} srcSet={quoteSampleArt.srcSet} sizes="(min-width: 1024px) 20rem, 40vw" alt="" decoding="async" />
+                  )}
+                </div>
+              </div>
+              <div className={styles.lip} />
+              <div className={styles.glass} />
+            </div>
+          </div>
+        </div>
+
+        {!photo && (
+          <label className="absolute bottom-2 right-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-stone-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-within:ring-2 focus-within:ring-primary">
+            <ImagePlus className="size-3.5" aria-hidden="true" />
+            Use your photo
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={(e) => {
+                onAddPhoto(e);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        )}
+      </div>
+
+      <div
+        role="group"
+        aria-label="Frame to preview"
+        className="mt-2 flex flex-wrap gap-1.5 lg:mt-3"
+        onPointerEnter={preloadFrames}
+        onTouchStart={preloadFrames}
+        onFocus={preloadFrames}
+      >
+        {quoteFrames.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            title={option.label}
+            aria-label={`${option.label} frame`}
+            aria-pressed={option.id === frameId}
+            onClick={() => onFrameChange(option.id)}
+            className={cn(
+              "size-9 overflow-hidden rounded-md outline-offset-2 transition-shadow focus-visible:outline-2 focus-visible:outline-primary lg:size-11",
+              option.id === frameId ? "ring-2 ring-primary ring-offset-2" : "ring-1 ring-border hover:ring-primary/60",
+            )}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- 160 px file, see scripts/build-quote-frames.mjs */}
+            <img src={option.corner} alt="" width={160} height={160} className="size-full object-cover" />
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-2 text-sm lg:mt-3">
+        <p className="font-medium text-foreground">
+          {frame.label} frame{matWords ? ` with ${matWords}` : ""}
+        </p>
+        <p className="hidden text-muted-foreground lg:block">
+          {picture}
+          {sizeWords ? `, ${sizeWords}` : ""}
+        </p>
+        {photo && !photoShown && (
+          <p className="text-muted-foreground">This photo type can&apos;t be shown here, but it will still be sent.</p>
+        )}
+        <p className="mt-2 hidden text-xs text-muted-foreground lg:block">
+          For illustration only. We confirm the exact frame, mat and size in your quote.
+        </p>
+      </div>
+    </div>
+  );
+}
