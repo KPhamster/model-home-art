@@ -64,8 +64,8 @@ const MAT_WORDS: Record<string, string> = {
   double: "a double mat",
   "not-sure": "a single mat",
 };
-// How strong the reflection on the glass is drawn.
-const GLARE: Record<string, number> = { standard: 1, upgraded: 0.3 };
+/** How strong a reflection each glass answer is drawn with: plain glass 1, museum glass none. */
+export const GLARE: Partial<Record<string, number>> = { standard: 1, upgraded: 0.3 };
 
 type FramePreviewProps = {
   /** The visitor's first photo, if they have added one. */
@@ -240,5 +240,68 @@ export function FramePreview({ photo, width, height, matting, protection, frameI
         </p>
       </div>
     </div>
+  );
+}
+
+type FrameCornerProps = {
+  frameId: QuoteFrameId;
+  /** A matting answer from the form: "none", "single" or "double". */
+  matting?: string;
+  /** How strong a reflection to draw on the glass, 0 to 1. */
+  glare?: number;
+  /** The visitor's first photo; the sample picture is drawn without one. */
+  photo: File | null;
+  /** How many inches of the framed picture the tile's width shows. Smaller is closer. */
+  span?: number;
+  className?: string;
+};
+
+/**
+ * A close-up of the top-left corner of a framed picture, for the form's option tiles: the
+ * same frame, mat, glass and picture as the preview, enlarged. Purely decorative; the tile's
+ * label says what the option is. It needs a size from its class, an aspect ratio for one.
+ */
+export function FrameCorner({ frameId, matting = "none", glare = 0, photo, span = 8, className }: FrameCornerProps) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const url = photo ? photoUrlFor(photo) : null;
+  const photoShown = url !== null && url !== failedUrl;
+
+  const frame = frameById(frameId);
+  // Always a 16 x 20 in picture, so every tile is drawn at the same scale.
+  const size = measure("16", "20", null, matting, frame.inches);
+  const [top, right, bottom, left] = frame.slice;
+  const frameStyle = {
+    "--u": `calc(100cqw / ${span})`,
+    "--total-w": size.totalW,
+    "--total-h": size.totalH,
+    "--moulding": size.moulding,
+    "--mat": size.mat,
+    "--reveal": size.reveal,
+    "--glare": glare,
+    borderImageSource: `url(${frame.image})`,
+    borderImageSlice: `${top}% ${right}% ${bottom}% ${left}%`,
+  } as CSSProperties;
+
+  // Spans, not divs: the tiles are labels, which may only hold inline elements.
+  return (
+    <span aria-hidden="true" className={cn(styles.corner, "block", className)}>
+      <span className={styles.frame} style={frameStyle}>
+        <span className={cn(styles.opening, "block")} data-mat={size.reveal > 0 ? "double" : size.mat > 0 ? "single" : "none"}>
+          <span className={cn(styles.reveal, "block")}>
+            <span className={cn(styles.art, "block")}>
+              {photoShown ? (
+                // eslint-disable-next-line @next/next/no-img-element -- a local file the visitor just chose
+                <img key={url} src={url} alt="" onError={() => setFailedUrl(url)} />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element -- pre-sized files, see scripts/build-quote-frames.mjs
+                <img src={quoteSampleArt.src} srcSet={quoteSampleArt.srcSet} sizes="20rem" alt="" decoding="async" />
+              )}
+            </span>
+          </span>
+          <span className={styles.lip} />
+          <span className={styles.glass} />
+        </span>
+      </span>
+    </span>
   );
 }
