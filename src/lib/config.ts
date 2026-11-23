@@ -86,6 +86,32 @@ export const extendedFramingCategories = [
   { id: "flags", name: "Flags & Banners", icon: "flag" },
 ] as const;
 
+/**
+ * The quote-form category each kind on the What We Frame page stands for. A "Get a Quote"
+ * button there opens the form at /quote?category=<id>, and the form looks the id up here,
+ * so every kind listed on the site can be chosen on the form.
+ */
+export const quoteCategoryForFramingId: Record<string, string> = {
+  jerseys: "Jersey",
+  mirrors: "Mirror",
+  diplomas: "Diploma/Certificate",
+  "fine-art": "Fine Art",
+  posters: "Poster/Print",
+  photos: "Photo",
+  canvas: "Canvas",
+  needlework: "Needlework/Textile",
+  shadowboxes: "Shadowbox/Memorabilia",
+  medals: "Medals/Awards",
+  vinyl: "Vinyl/Album Art",
+  baby: "Baby Keepsake",
+  wedding: "Wedding",
+  military: "Military",
+  sports: "Sports Equipment",
+  documents: "Document",
+  maps: "Map/Blueprint",
+  flags: "Flag/Banner",
+};
+
 // Services list
 export const services = [
   {
@@ -140,6 +166,8 @@ export const services = [
 
 // Quote form options
 export const quoteOptions = {
+  // The quote form shows the first `mainCategoryCount` of these and "Other" (always last);
+  // the ones in between appear when the visitor asks for more.
   categories: [
     "Photo",
     "Poster/Print",
@@ -150,8 +178,18 @@ export const quoteOptions = {
     "Canvas",
     "Needlework/Textile",
     "Shadowbox/Memorabilia",
+    "Medals/Awards",
+    "Vinyl/Album Art",
+    "Baby Keepsake",
+    "Wedding",
+    "Military",
+    "Sports Equipment",
+    "Document",
+    "Map/Blueprint",
+    "Flag/Banner",
     "Other",
   ],
+  mainCategoryCount: 9,
   styles: [
     { value: "modern", label: "Modern" },
     { value: "classic", label: "Classic" },

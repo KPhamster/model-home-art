@@ -168,7 +168,8 @@ export default function WhatWeFramePage() {
                       size="sm"
                       className="mt-4 border-primary/60 text-primary hover:bg-primary hover:text-white"
                     >
-                      <Link href="/quote">Get a Quote</Link>
+                      {/* Opens the quote form with this kind already chosen. */}
+                      <Link href={`/quote?category=${category.id}`}>Get a Quote</Link>
                     </Button>
                   </div>
                 </article>
