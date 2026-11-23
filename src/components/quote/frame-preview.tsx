@@ -68,8 +68,10 @@ const MAT_WORDS: Record<string, string> = {
 export const GLARE: Partial<Record<string, number>> = { standard: 1, upgraded: 0.3 };
 
 type FramePreviewProps = {
-  /** The visitor's first photo, if they have added one. */
+  /** Every photo the visitor has added, and the one to draw (null before they add any). */
+  photos: File[];
   photo: File | null;
+  onPhotoChange: (photo: File) => void;
   /** Width and height of the item in inches, as typed. */
   width: string;
   height: string;
@@ -88,7 +90,19 @@ type FramePreviewProps = {
  * it as they answer the form: the frame they pick, the mat, the glass and the size. Below the
  * "lg" breakpoint it lays itself out shorter, to leave a phone screen room for the form.
  */
-export function FramePreview({ photo, width, height, matting, protection, frameId, onFrameChange, onAddPhoto, className }: FramePreviewProps) {
+export function FramePreview({
+  photos,
+  photo,
+  onPhotoChange,
+  width,
+  height,
+  matting,
+  protection,
+  frameId,
+  onFrameChange,
+  onAddPhoto,
+  className,
+}: FramePreviewProps) {
   // The frame on screen. It follows frameId once that frame's photo has downloaded, so the
   // picture never sits bare while one loads.
   const [shownId, setShownId] = useState(frameId);
@@ -224,21 +238,56 @@ export function FramePreview({ photo, width, height, matting, protection, frameI
         ))}
       </div>
 
-      <div className="mt-2 text-sm lg:mt-3">
-        <p className="font-medium text-foreground">
-          {frame.label} frame{matWords ? ` with ${matWords}` : ""}
-        </p>
-        <p className="hidden text-muted-foreground lg:block">
-          {picture}
-          {sizeWords ? `, ${sizeWords}` : ""}
-        </p>
-        {photo && !photoShown && (
-          <p className="text-muted-foreground">This photo type can&apos;t be shown here, but it will still be sent.</p>
+      <div className="mt-2 flex items-start justify-between gap-3 text-sm lg:mt-3">
+        <div className="min-w-0">
+          <p className="font-medium text-foreground">
+            {frame.label} frame{matWords ? ` with ${matWords}` : ""}
+          </p>
+          <p className="hidden text-muted-foreground lg:block">
+            {picture}
+            {sizeWords ? `, ${sizeWords}` : ""}
+          </p>
+          {photo && !photoShown && (
+            <p className="text-muted-foreground">This photo type can&apos;t be shown here, but it will still be sent.</p>
+          )}
+        </div>
+
+        {/* With more than one photo, the visitor picks which one is framed. */}
+        {photos.length > 1 && (
+          <div role="group" aria-label="Photo to preview" className="flex shrink-0 gap-1.5">
+            {photos.map((option, i) => (
+              <button
+                key={photoUrlFor(option)}
+                type="button"
+                aria-label={`Show photo ${i + 1} of ${photos.length}`}
+                aria-pressed={option === photo}
+                onClick={() => onPhotoChange(option)}
+                className={cn(
+                  "relative size-9 overflow-hidden rounded-md bg-sand text-xs font-medium text-stone-600 outline-offset-2 transition-shadow focus-visible:outline-2 focus-visible:outline-primary",
+                  option === photo ? "ring-2 ring-primary ring-offset-2" : "ring-1 ring-border hover:ring-primary/60",
+                )}
+              >
+                {/* The photo's number, seen only if the browser cannot draw the photo itself. */}
+                <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center">
+                  {i + 1}
+                </span>
+                {/* eslint-disable-next-line @next/next/no-img-element -- a local file the visitor just chose */}
+                <img
+                  src={photoUrlFor(option)}
+                  alt=""
+                  className="relative size-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.visibility = "hidden";
+                  }}
+                />
+              </button>
+            ))}
+          </div>
         )}
-        <p className="mt-2 hidden text-xs text-muted-foreground lg:block">
-          For illustration only. We confirm the exact frame, mat and size in your quote.
-        </p>
       </div>
+      <p className="mt-2 hidden text-xs text-muted-foreground lg:block">
+        For illustration only. We confirm the exact frame, mat and size in your quote.
+      </p>
     </div>
   );
 }
@@ -249,7 +298,7 @@ type FrameCornerProps = {
   matting?: string;
   /** How strong a reflection to draw on the glass, 0 to 1. */
   glare?: number;
-  /** The visitor's first photo; the sample picture is drawn without one. */
+  /** The photo the preview is showing; the sample picture is drawn without one. */
   photo: File | null;
   /** How many inches of the framed picture the tile's width shows. Smaller is closer. */
   span?: number;
