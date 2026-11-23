@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { PageHero } from "@/components/ui/page-hero";
+import { Photo } from "@/components/ui/photo";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -22,10 +23,12 @@ import {
 import { quoteOptions, businessConfig } from "@/lib/config";
 import { DEFAULT_FRAME, FRAME_FOR_STYLE, FrameCorner, FramePreview, GLARE } from "@/components/quote/frame-preview";
 import type { QuoteFrameId } from "@/components/quote/quote-frames";
+import type { PhotoName } from "@/lib/photos";
 import { toast } from "sonner";
 import {
   ArrowLeft, ArrowRight, Upload, X, Check, Camera,
-  Ruler, Palette, Clock, User, CheckCircle, CircleHelp
+  Ruler, Palette, Clock, User, CheckCircle, CircleHelp,
+  Shapes, Store, Truck, Package, Hammer, type LucideIcon
 } from "lucide-react";
 
 const steps = [
@@ -53,15 +56,53 @@ const getTotalFileSize = (files: File[]): number => {
 };
 
 const TILE_PICTURE = "aspect-[16/10] w-full";
+// A category card's picture: square on a phone, where three sit side by side, taller from there up.
+const CATEGORY_PICTURE = "aspect-square w-full sm:aspect-[4/5]";
 
-/** One answer on the Style step: a picture of what it looks like, with its name underneath. */
-function PictureOption({ value, label, selected, children }: { value: string; label: string; selected: boolean; children?: React.ReactNode }) {
+/** The site photo that stands for each category on the first step. "Other" has none. */
+const CATEGORY_PHOTO: Partial<Record<string, PhotoName>> = {
+  "photo": "photo",
+  "poster/print": "poster",
+  "fine art": "fine-art",
+  "diploma/certificate": "diploma",
+  "jersey": "jersey",
+  "mirror": "mirror",
+  "canvas": "canvas-stretching",
+  "needlework/textile": "needlework",
+  "shadowbox/memorabilia": "memorabilia",
+};
+
+/** The icon for each way of getting the finished piece to the customer. */
+const SERVICE_ICON: Partial<Record<string, LucideIcon>> = {
+  pickup: Store,
+  delivery: Truck,
+  shipping: Package,
+  installation: Hammer,
+};
+
+// How an answer card looks when it is and is not the chosen one, and when it has keyboard focus.
+const optionCard = (selected: boolean) =>
+  `cursor-pointer overflow-hidden rounded-lg border transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/60 ${
+    selected ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/50"
+  }`;
+
+/** One answer shown as a picture of what it is, with its name underneath. */
+function PictureOption({
+  value,
+  label,
+  selected,
+  small,
+  children,
+}: {
+  value: string;
+  label: string;
+  selected: boolean;
+  /** Smaller name, for cards that sit three across on a phone. */
+  small?: boolean;
+  children?: React.ReactNode;
+}) {
   return (
-    <Label
-      className={`flex cursor-pointer flex-col items-stretch gap-0 overflow-hidden rounded-lg border transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/60 ${
-        selected ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/50"
-      }`}
-    >
+    <Label className={`flex flex-col items-stretch gap-0 ${optionCard(selected)}`}>
       <RadioGroupItem value={value} className="sr-only" />
       {children || (
         // "Not sure": nothing to picture.
@@ -70,7 +111,9 @@ function PictureOption({ value, label, selected, children }: { value: string; la
         </span>
       )}
       {/* A zero-width space lets "Museum/Preservation" wrap at the slash on a narrow tile. */}
-      <span className="px-2 py-2 text-center text-sm font-normal leading-snug">{label.replaceAll("/", "/\u200b")}</span>
+      <span className={`px-2 py-2 text-center font-normal leading-snug ${small ? "px-1 text-xs sm:px-2 sm:text-sm" : "text-sm"}`}>
+        {label.replaceAll("/", "/\u200b")}
+      </span>
     </Label>
   );
 }
@@ -482,22 +525,35 @@ export default function QuotePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
-                  <Select
+                  <Label id="category-label">Category *</Label>
+                  <RadioGroup
+                    aria-labelledby="category-label"
                     value={formData.category}
                     onValueChange={(value) => updateField("category", value)}
+                    className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 xl:grid-cols-5"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {quoteOptions.categories.map((cat) => (
-                        <SelectItem key={cat} value={cat.toLowerCase()}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    {/* A photo of that kind of piece, framed; "Other" gets a symbol instead. */}
+                    {quoteOptions.categories.map((cat) => {
+                      const value = cat.toLowerCase();
+                      const photo = CATEGORY_PHOTO[value];
+                      return (
+                        <PictureOption key={cat} value={value} label={cat} selected={formData.category === value} small>
+                          {photo ? (
+                            <Photo
+                              name={photo}
+                              alt=""
+                              sizes="(min-width: 1280px) 7rem, (min-width: 640px) 8.5rem, 30vw"
+                              className={`${CATEGORY_PICTURE} object-cover`}
+                            />
+                          ) : (
+                            <span aria-hidden="true" className={`${CATEGORY_PICTURE} flex items-center justify-center bg-sand text-primary/50`}>
+                              <Shapes className="size-7" strokeWidth={1.5} />
+                            </span>
+                          )}
+                        </PictureOption>
+                      );
+                    })}
+                  </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
@@ -790,21 +846,21 @@ export default function QuotePage() {
                   <RadioGroup
                     value={formData.service}
                     onValueChange={(value) => updateField("service", value)}
-                    className="space-y-2"
+                    className="grid grid-cols-2 gap-3 sm:grid-cols-4"
                   >
-                    {quoteOptions.services.map((service) => (
-                      <Label
-                        key={service.value}
-                        className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                          formData.service === service.value
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <RadioGroupItem value={service.value} className="mr-3" />
-                        <span className="text-sm">{service.label}</span>
-                      </Label>
-                    ))}
+                    {quoteOptions.services.map((service) => {
+                      const Icon = SERVICE_ICON[service.value];
+                      return (
+                        <Label
+                          key={service.value}
+                          className={`flex flex-col items-center gap-2 px-2 py-4 text-center ${optionCard(formData.service === service.value)}`}
+                        >
+                          <RadioGroupItem value={service.value} className="sr-only" />
+                          {Icon && <Icon aria-hidden="true" className="size-7 text-primary" strokeWidth={1.5} />}
+                          <span className="text-sm font-normal leading-snug">{service.label}</span>
+                        </Label>
+                      );
+                    })}
                   </RadioGroup>
                 </div>
 
