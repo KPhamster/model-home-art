@@ -19,5 +19,34 @@ export const quoteFrames = [
 export type QuoteFrame = (typeof quoteFrames)[number];
 export type QuoteFrameId = QuoteFrame["id"];
 
-/** The picture shown until the visitor adds a photo of their own: 16 x 20 in, portrait. */
-export const quoteSampleArt = {"src":"/quote/sample-art-830.webp","srcSet":"/quote/sample-art-480.webp 480w, /quote/sample-art-830.webp 830w","widthInches":16,"heightInches":20} as const;
+/** A sample picture the preview can frame, and the size in inches it is drawn at. */
+export type QuoteSample = { src: string; srcSet: string; widthInches: number; heightInches: number };
+
+/** The picture shown until a kind of piece is chosen: 16 x 20 in, portrait. */
+export const quoteSampleArt: QuoteSample = {"src":"/quote/sample-art-830.webp","srcSet":"/quote/sample-art-480.webp 480w, /quote/sample-art-830.webp 830w","widthInches":16,"heightInches":20};
+
+/**
+ * The picture shown for each kind of piece on the quote form, keyed by the form's value for
+ * it, until the visitor adds a photo of their own. A kind that is not here ("other") keeps
+ * the default above.
+ */
+export const quoteCategorySamples: Partial<Record<string, QuoteSample>> = {
+  "photo": {"src":"/quote/samples/photo-960.webp","srcSet":"/quote/samples/photo-480.webp 480w, /quote/samples/photo-960.webp 960w","widthInches":8,"heightInches":9.9},
+  "poster/print": {"src":"/quote/samples/poster-960.webp","srcSet":"/quote/samples/poster-480.webp 480w, /quote/samples/poster-960.webp 960w","widthInches":24,"heightInches":35.8},
+  "fine art": {"src":"/quote/samples/fine-art-960.webp","srcSet":"/quote/samples/fine-art-480.webp 480w, /quote/samples/fine-art-960.webp 960w","widthInches":18,"heightInches":24.1},
+  "diploma/certificate": {"src":"/quote/samples/diploma-960.webp","srcSet":"/quote/samples/diploma-480.webp 480w, /quote/samples/diploma-960.webp 960w","widthInches":16,"heightInches":19.9},
+  "jersey": {"src":"/quote/samples/jersey-960.webp","srcSet":"/quote/samples/jersey-480.webp 480w, /quote/samples/jersey-960.webp 960w","widthInches":24,"heightInches":43},
+  "mirror": {"src":"/quote/samples/mirror-960.webp","srcSet":"/quote/samples/mirror-480.webp 480w, /quote/samples/mirror-960.webp 960w","widthInches":20,"heightInches":35.8},
+  "canvas": {"src":"/quote/samples/canvas-960.webp","srcSet":"/quote/samples/canvas-480.webp 480w, /quote/samples/canvas-960.webp 960w","widthInches":18,"heightInches":24.1},
+  "needlework/textile": {"src":"/quote/samples/needlework-960.webp","srcSet":"/quote/samples/needlework-480.webp 480w, /quote/samples/needlework-960.webp 960w","widthInches":12,"heightInches":14.9},
+  "shadowbox/memorabilia": {"src":"/quote/samples/shadowbox-960.webp","srcSet":"/quote/samples/shadowbox-480.webp 480w, /quote/samples/shadowbox-960.webp 960w","widthInches":18,"heightInches":24.1},
+  "medals/awards": {"src":"/quote/samples/medals-960.webp","srcSet":"/quote/samples/medals-480.webp 480w, /quote/samples/medals-960.webp 960w","widthInches":12,"heightInches":17.9},
+  "vinyl/album art": {"src":"/quote/samples/vinyl-960.webp","srcSet":"/quote/samples/vinyl-480.webp 480w, /quote/samples/vinyl-960.webp 960w","widthInches":14,"heightInches":25.1},
+  "baby keepsake": {"src":"/quote/samples/baby-960.webp","srcSet":"/quote/samples/baby-480.webp 480w, /quote/samples/baby-960.webp 960w","widthInches":12,"heightInches":16.1},
+  "wedding": {"src":"/quote/samples/wedding-960.webp","srcSet":"/quote/samples/wedding-480.webp 480w, /quote/samples/wedding-960.webp 960w","widthInches":15,"heightInches":20.1},
+  "military": {"src":"/quote/samples/military-960.webp","srcSet":"/quote/samples/military-480.webp 480w, /quote/samples/military-960.webp 960w","widthInches":18,"heightInches":24.1},
+  "sports equipment": {"src":"/quote/samples/sports-960.webp","srcSet":"/quote/samples/sports-480.webp 480w, /quote/samples/sports-960.webp 960w","widthInches":16,"heightInches":20},
+  "document": {"src":"/quote/samples/document-960.webp","srcSet":"/quote/samples/document-480.webp 480w, /quote/samples/document-960.webp 960w","widthInches":12,"heightInches":17.9},
+  "map/blueprint": {"src":"/quote/samples/map-960.webp","srcSet":"/quote/samples/map-480.webp 480w, /quote/samples/map-960.webp 960w","widthInches":18,"heightInches":24.1},
+  "flag/banner": {"src":"/quote/samples/flag-960.webp","srcSet":"/quote/samples/flag-480.webp 480w, /quote/samples/flag-960.webp 960w","widthInches":24,"heightInches":29.8},
+};

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { quoteOptions, quoteCategoryForFramingId, businessConfig } from "@/lib/config";
 import { DEFAULT_FRAME, FRAME_FOR_STYLE, FrameCorner, FramePreview, GLARE } from "@/components/quote/frame-preview";
-import type { QuoteFrameId } from "@/components/quote/quote-frames";
+import { quoteCategorySamples, quoteSampleArt, type QuoteFrameId } from "@/components/quote/quote-frames";
 import type { PhotoName } from "@/lib/photos";
 import { toast } from "sonner";
 import {
@@ -208,6 +208,8 @@ export default function QuotePage() {
   const linkedId = useSyncExternalStore(noSubscription, framingIdInAddress, () => null);
   const linkedCategory = linkedId && Object.hasOwn(quoteCategoryForFramingId, linkedId) ? quoteCategoryForFramingId[linkedId].toLowerCase() : "";
   const category = formData.category || linkedCategory;
+  // The picture framed until the visitor adds a photo: one of the kind of piece they chose.
+  const sample = quoteCategorySamples[category] ?? quoteSampleArt;
   // The less common categories stay folded away unless asked for, or unless one of them is chosen.
   const [moreCategoriesOpen, setMoreCategoriesOpen] = useState(false);
   const moreCategoryChosen = MORE_CATEGORIES.some((cat) => cat.toLowerCase() === category);
@@ -523,6 +525,7 @@ export default function QuotePage() {
           }`}
         >
           <FramePreview
+            sample={sample}
             photos={formData.images}
             photo={shownPhoto}
             onPhotoChange={setChosenPhoto}
@@ -786,7 +789,7 @@ export default function QuotePage() {
                       const lead = FRAME_FOR_STYLE[style.value];
                       return (
                         <PictureOption key={style.value} value={style.value} label={style.label} selected={formData.stylePreference === style.value}>
-                          {lead && <FrameCorner frameId={lead} photo={shownPhoto} span={7.5} className={TILE_PICTURE} />}
+                          {lead && <FrameCorner frameId={lead} photo={shownPhoto} sample={sample} span={7.5} className={TILE_PICTURE} />}
                         </PictureOption>
                       );
                     })}
@@ -804,7 +807,7 @@ export default function QuotePage() {
                     {quoteOptions.matting.map((mat) => (
                       <PictureOption key={mat.value} value={mat.value} label={mat.label} selected={formData.matting === mat.value}>
                         {mat.value !== "not-sure" && (
-                          <FrameCorner frameId={previewFrame} matting={mat.value} photo={shownPhoto} span={14} className={TILE_PICTURE} />
+                          <FrameCorner frameId={previewFrame} matting={mat.value} photo={shownPhoto} sample={sample} span={14} className={TILE_PICTURE} />
                         )}
                       </PictureOption>
                     ))}
@@ -822,7 +825,7 @@ export default function QuotePage() {
                     {quoteOptions.protection.map((prot) => (
                       <PictureOption key={prot.value} value={prot.value} label={prot.label} selected={formData.protection === prot.value}>
                         {prot.value !== "not-sure" && (
-                          <FrameCorner frameId={previewFrame} glare={GLARE[prot.value] ?? 0} photo={shownPhoto} span={9} className={TILE_PICTURE} />
+                          <FrameCorner frameId={previewFrame} glare={GLARE[prot.value] ?? 0} photo={shownPhoto} sample={sample} span={9} className={TILE_PICTURE} />
                         )}
                       </PictureOption>
                     ))}
