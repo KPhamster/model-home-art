@@ -20,12 +20,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { quoteOptions, businessConfig } from "@/lib/config";
-import { DEFAULT_FRAME, FRAME_FOR_STYLE, FramePreview } from "@/components/quote/frame-preview";
+import { DEFAULT_FRAME, FRAME_FOR_STYLE, FrameCorner, FramePreview, GLARE } from "@/components/quote/frame-preview";
 import type { QuoteFrameId } from "@/components/quote/quote-frames";
 import { toast } from "sonner";
 import {
   ArrowLeft, ArrowRight, Upload, X, Check, Camera,
-  Ruler, Palette, Clock, User, CheckCircle
+  Ruler, Palette, Clock, User, CheckCircle, CircleHelp
 } from "lucide-react";
 
 const steps = [
@@ -51,6 +51,29 @@ const formatFileSize = (bytes: number): string => {
 const getTotalFileSize = (files: File[]): number => {
   return files.reduce((total, file) => total + file.size, 0);
 };
+
+const TILE_PICTURE = "aspect-[16/10] w-full";
+
+/** One answer on the Style step: a picture of what it looks like, with its name underneath. */
+function PictureOption({ value, label, selected, children }: { value: string; label: string; selected: boolean; children?: React.ReactNode }) {
+  return (
+    <Label
+      className={`flex cursor-pointer flex-col items-stretch gap-0 overflow-hidden rounded-lg border transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/60 ${
+        selected ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:border-primary/50"
+      }`}
+    >
+      <RadioGroupItem value={value} className="sr-only" />
+      {children || (
+        // "Not sure": nothing to picture.
+        <span aria-hidden="true" className={`${TILE_PICTURE} flex items-center justify-center bg-sand text-primary/50`}>
+          <CircleHelp className="size-7" strokeWidth={1.5} />
+        </span>
+      )}
+      {/* A zero-width space lets "Museum/Preservation" wrap at the slash on a narrow tile. */}
+      <span className="px-2 py-2 text-center text-sm font-normal leading-snug">{label.replaceAll("/", "/\u200b")}</span>
+    </Label>
+  );
+}
 
 interface FormData {
   // Step 1
@@ -117,6 +140,9 @@ export default function QuotePage() {
   const updateField = <K extends keyof FormData>(field: K, value: FormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  // The picture the Style step's tiles are drawn with: the visitor's own, once they have one.
+  const tilePhoto = formData.images[0] ?? null;
 
   const chooseStyle = (value: string) => {
     updateField("stylePreference", value);
@@ -647,19 +673,15 @@ export default function QuotePage() {
                     onValueChange={chooseStyle}
                     className="grid grid-cols-2 sm:grid-cols-3 gap-3"
                   >
-                    {quoteOptions.styles.map((style) => (
-                      <Label
-                        key={style.value}
-                        className={`flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                          formData.stylePreference === style.value
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <RadioGroupItem value={style.value} className="sr-only" />
-                        <span className="text-sm">{style.label}</span>
-                      </Label>
-                    ))}
+                    {/* Each style shows a corner of the frame it brings up in the preview. */}
+                    {quoteOptions.styles.map((style) => {
+                      const lead = FRAME_FOR_STYLE[style.value];
+                      return (
+                        <PictureOption key={style.value} value={style.value} label={style.label} selected={formData.stylePreference === style.value}>
+                          {lead && <FrameCorner frameId={lead} photo={tilePhoto} span={7.5} className={TILE_PICTURE} />}
+                        </PictureOption>
+                      );
+                    })}
                   </RadioGroup>
                 </div>
 
@@ -668,20 +690,15 @@ export default function QuotePage() {
                   <RadioGroup
                     value={formData.matting}
                     onValueChange={(value) => updateField("matting", value)}
-                    className="grid grid-cols-2 gap-3"
+                    className="grid grid-cols-2 sm:grid-cols-4 gap-3"
                   >
+                    {/* Drawn in the frame the preview is showing, from further back so the mat fits in. */}
                     {quoteOptions.matting.map((mat) => (
-                      <Label
-                        key={mat.value}
-                        className={`flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                          formData.matting === mat.value
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <RadioGroupItem value={mat.value} className="sr-only" />
-                        <span className="text-sm">{mat.label}</span>
-                      </Label>
+                      <PictureOption key={mat.value} value={mat.value} label={mat.label} selected={formData.matting === mat.value}>
+                        {mat.value !== "not-sure" && (
+                          <FrameCorner frameId={previewFrame} matting={mat.value} photo={tilePhoto} span={14} className={TILE_PICTURE} />
+                        )}
+                      </PictureOption>
                     ))}
                   </RadioGroup>
                 </div>
@@ -691,20 +708,15 @@ export default function QuotePage() {
                   <RadioGroup
                     value={formData.protection}
                     onValueChange={(value) => updateField("protection", value)}
-                    className="grid grid-cols-2 gap-3"
+                    className="grid grid-cols-2 sm:grid-cols-4 gap-3"
                   >
+                    {/* The same corner three times, differing only in how much the glass reflects. */}
                     {quoteOptions.protection.map((prot) => (
-                      <Label
-                        key={prot.value}
-                        className={`flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors ${
-                          formData.protection === prot.value
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <RadioGroupItem value={prot.value} className="sr-only" />
-                        <span className="text-sm">{prot.label}</span>
-                      </Label>
+                      <PictureOption key={prot.value} value={prot.value} label={prot.label} selected={formData.protection === prot.value}>
+                        {prot.value !== "not-sure" && (
+                          <FrameCorner frameId={previewFrame} glare={GLARE[prot.value] ?? 0} photo={tilePhoto} span={9} className={TILE_PICTURE} />
+                        )}
+                      </PictureOption>
                     ))}
                   </RadioGroup>
                 </div>
