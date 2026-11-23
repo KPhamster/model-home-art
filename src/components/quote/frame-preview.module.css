@@ -21,7 +21,7 @@
 }
 
 .frame {
-  --u: min(calc(84cqw / var(--total-w)), calc(84cqh / var(--total-h)));
+  --u: min(calc(88cqw / var(--total-w)), calc(88cqh / var(--total-h)));
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
   box-sizing: border-box;
   width: calc(var(--u) * var(--total-w));

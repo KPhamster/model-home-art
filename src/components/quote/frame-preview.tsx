@@ -82,13 +82,15 @@ type FramePreviewProps = {
   onFrameChange: (id: QuoteFrameId) => void;
   /** Lets the visitor add a photo from the preview itself; uses the form's own upload checks. */
   onAddPhoto: (event: ChangeEvent<HTMLInputElement>) => void;
+  /** Below the "lg" breakpoint, draw the picture shorter. For when the preview is pinned above the form. */
+  compactOnPhones?: boolean;
   className?: string;
 };
 
 /**
  * Shows the visitor's own photo (or a sample picture) on a wall, in a real frame, and redraws
  * it as they answer the form: the frame they pick, the mat, the glass and the size. Below the
- * "lg" breakpoint it lays itself out shorter, to leave a phone screen room for the form.
+ * "lg" breakpoint it drops its heading and small print, to leave a phone screen room for the form.
  */
 export function FramePreview({
   photos,
@@ -101,6 +103,7 @@ export function FramePreview({
   frameId,
   onFrameChange,
   onAddPhoto,
+  compactOnPhones,
   className,
 }: FramePreviewProps) {
   // The frame on screen. It follows frameId once that frame's photo has downloaded, so the
@@ -167,7 +170,13 @@ export function FramePreview({
         <div
           role="img"
           aria-label={`Preview: ${summary}${sizeWords ? `, ${sizeWords}` : ""}.`}
-          className={cn(styles.stage, "h-40 w-full rounded-xl lg:aspect-square lg:h-auto lg:max-h-[58svh]")}
+          // Phones: a 4:3 wall, or a short strip when pinned. Desktop: a tall wall, as tall as
+          // still lets the whole panel fit on screen under the site's header.
+          className={cn(
+            styles.stage,
+            "w-full rounded-xl lg:aspect-[4/5] lg:max-h-[calc(100svh-22rem)]",
+            compactOnPhones ? "max-lg:h-44" : "max-lg:aspect-[4/3] max-lg:max-h-[22rem]",
+          )}
         >
           <div className={styles.frame} style={frameStyle}>
             <div className={styles.opening} data-mat={size.reveal > 0 ? "double" : size.mat > 0 ? "single" : "none"}>
