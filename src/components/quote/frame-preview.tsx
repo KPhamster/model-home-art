@@ -82,7 +82,10 @@ type FramePreviewProps = {
   onFrameChange: (id: QuoteFrameId) => void;
   /** Lets the visitor add a photo from the preview itself; uses the form's own upload checks. */
   onAddPhoto: (event: ChangeEvent<HTMLInputElement>) => void;
-  /** Below the "lg" breakpoint, draw the picture shorter. For when the preview is pinned above the form. */
+  /**
+   * Below the "lg" breakpoint, use a shorter wall and leave out the caption. For when the
+   * preview is pinned above the form and the form needs the rest of the screen.
+   */
   compactOnPhones?: boolean;
   className?: string;
 };
@@ -90,7 +93,7 @@ type FramePreviewProps = {
 /**
  * Shows the visitor's own photo (or a sample picture) on a wall, in a real frame, and redraws
  * it as they answer the form: the frame they pick, the mat, the glass and the size. Below the
- * "lg" breakpoint it drops its heading and small print, to leave a phone screen room for the form.
+ * "lg" breakpoint it drops its second caption line and small print, to leave a phone screen room for the form.
  */
 export function FramePreview({
   photos,
@@ -161,21 +164,20 @@ export function FramePreview({
 
   return (
     <div className={cn("rounded-2xl border border-border bg-white p-3 shadow-sm lg:p-4", className)}>
-      <div className="mb-3 hidden items-baseline justify-between gap-3 lg:flex">
-        <h2 className="font-heading text-xl font-semibold tracking-tight">See it framed</h2>
-        <span className="text-xs text-muted-foreground">Updates as you answer</span>
-      </div>
+      {/* No visible heading: every pixel of height goes to the picture. */}
+      <h2 className="sr-only">Live preview of your framed picture</h2>
 
       <div className="relative">
         <div
           role="img"
           aria-label={`Preview: ${summary}${sizeWords ? `, ${sizeWords}` : ""}.`}
-          // Phones: a 4:3 wall, or a short strip when pinned. Desktop: a tall wall, as tall as
-          // still lets the whole panel fit on screen under the site's header.
+          // Phones: a square wall, or a shorter strip when pinned. Desktop: a tall wall, as tall
+          // as still lets the whole panel fit on screen under the site's header (18.5rem is the
+          // header, the gap under it, and everything in the panel but the wall).
           className={cn(
             styles.stage,
-            "w-full rounded-xl lg:aspect-[4/5] lg:max-h-[calc(100svh-22rem)]",
-            compactOnPhones ? "max-lg:h-44" : "max-lg:aspect-[4/3] max-lg:max-h-[22rem]",
+            "w-full rounded-xl lg:aspect-[4/5] lg:max-h-[calc(100svh-18.5rem)]",
+            compactOnPhones ? "max-lg:h-52" : "max-lg:aspect-square max-lg:max-h-[26rem]",
           )}
         >
           <div className={styles.frame} style={frameStyle}>
@@ -247,7 +249,14 @@ export function FramePreview({
         ))}
       </div>
 
-      <div className="mt-2 flex items-start justify-between gap-3 text-sm lg:mt-3">
+      {/* Pinned on a phone, the caption goes (the wall takes its height) unless it has something
+          the visitor needs: the photo picker, or the note about a photo that cannot be drawn. */}
+      <div
+        className={cn(
+          "mt-2 flex items-start justify-between gap-3 text-sm lg:mt-3",
+          compactOnPhones && photos.length < 2 && !(photo && !photoShown) && "max-lg:hidden",
+        )}
+      >
         <div className="min-w-0">
           <p className="font-medium text-foreground">
             {frame.label} frame{matWords ? ` with ${matWords}` : ""}
