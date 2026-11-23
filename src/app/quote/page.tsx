@@ -401,8 +401,10 @@ export default function QuotePage() {
       lede="Tell us about your project and we'll provide options that fit your budget."
     />
     <div className="min-h-[calc(100vh-200px)] bg-sand py-10 lg:py-14">
-      {/* Phones: progress, preview, form in one column. Desktop: the preview stays beside the form. */}
-      <div className="container-wide max-w-3xl! lg:grid lg:max-w-6xl! lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-x-10">
+      {/* Phones: progress, preview, form in one column. Desktop: the preview stays beside the form,
+          wider on wider screens. The second row takes any height the preview adds, so the
+          progress bar stays snug against the form. */}
+      <div className="container-wide max-w-3xl! lg:grid lg:max-w-6xl! lg:grid-cols-[minmax(0,1fr)_24rem] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-10 xl:max-w-7xl! xl:grid-cols-[minmax(0,1fr)_30rem] 2xl:max-w-[1400px]! 2xl:grid-cols-[minmax(0,1fr)_34rem]">
 
         {/* Progress */}
         <div className="mb-8 lg:col-start-1">
@@ -461,11 +463,13 @@ export default function QuotePage() {
               setFramePicked(true);
             }}
             onAddPhoto={handleImageUpload}
+            compactOnPhones={currentStep === 3}
           />
         </div>
 
-        {/* Form Card */}
-        <Card className="lg:col-start-1">
+        {/* Form card, with the reassurance line kept right under it however tall the preview is */}
+        <div className="lg:col-start-1">
+        <Card>
           <CardContent className="p-6 md:p-8">
             {/* Step 1: Category & Description */}
             {currentStep === 1 && (
@@ -918,11 +922,12 @@ export default function QuotePage() {
         </Card>
 
         {/* Trust Indicators */}
-        <div className="mt-6 text-center text-sm text-muted-foreground lg:col-start-1">
+        <div className="mt-6 text-center text-sm text-muted-foreground">
           <p>
             <Check className="w-4 h-4 inline mr-1 text-primary" />
             We&apos;ll respond within {businessConfig.responseTime}
           </p>
+        </div>
         </div>
       </div>
     </div>
