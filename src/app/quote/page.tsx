@@ -141,8 +141,10 @@ export default function QuotePage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // The picture the Style step's tiles are drawn with: the visitor's own, once they have one.
-  const tilePhoto = formData.images[0] ?? null;
+  // The photo framed in the preview and in the Style step's tiles. It is the one the visitor
+  // picked or added last; if that one has been removed, their first.
+  const [chosenPhoto, setChosenPhoto] = useState<File | null>(null);
+  const shownPhoto = chosenPhoto && formData.images.includes(chosenPhoto) ? chosenPhoto : (formData.images[0] ?? null);
 
   const chooseStyle = (value: string) => {
     updateField("stylePreference", value);
@@ -173,6 +175,8 @@ export default function QuotePage() {
       ...prev,
       images: newImages,
     }));
+    // Show the photo that was just added.
+    if (files.length > 0) setChosenPhoto(newImages[newImages.length - 1]);
   };
 
   const removeImage = (index: number) => {
@@ -444,7 +448,9 @@ export default function QuotePage() {
           }`}
         >
           <FramePreview
-            photo={formData.images[0] ?? null}
+            photos={formData.images}
+            photo={shownPhoto}
+            onPhotoChange={setChosenPhoto}
             width={formData.width}
             height={formData.height}
             matting={formData.matting}
@@ -678,7 +684,7 @@ export default function QuotePage() {
                       const lead = FRAME_FOR_STYLE[style.value];
                       return (
                         <PictureOption key={style.value} value={style.value} label={style.label} selected={formData.stylePreference === style.value}>
-                          {lead && <FrameCorner frameId={lead} photo={tilePhoto} span={7.5} className={TILE_PICTURE} />}
+                          {lead && <FrameCorner frameId={lead} photo={shownPhoto} span={7.5} className={TILE_PICTURE} />}
                         </PictureOption>
                       );
                     })}
@@ -696,7 +702,7 @@ export default function QuotePage() {
                     {quoteOptions.matting.map((mat) => (
                       <PictureOption key={mat.value} value={mat.value} label={mat.label} selected={formData.matting === mat.value}>
                         {mat.value !== "not-sure" && (
-                          <FrameCorner frameId={previewFrame} matting={mat.value} photo={tilePhoto} span={14} className={TILE_PICTURE} />
+                          <FrameCorner frameId={previewFrame} matting={mat.value} photo={shownPhoto} span={14} className={TILE_PICTURE} />
                         )}
                       </PictureOption>
                     ))}
@@ -714,7 +720,7 @@ export default function QuotePage() {
                     {quoteOptions.protection.map((prot) => (
                       <PictureOption key={prot.value} value={prot.value} label={prot.label} selected={formData.protection === prot.value}>
                         {prot.value !== "not-sure" && (
-                          <FrameCorner frameId={previewFrame} glare={GLARE[prot.value] ?? 0} photo={tilePhoto} span={9} className={TILE_PICTURE} />
+                          <FrameCorner frameId={previewFrame} glare={GLARE[prot.value] ?? 0} photo={shownPhoto} span={9} className={TILE_PICTURE} />
                         )}
                       </PictureOption>
                     ))}
