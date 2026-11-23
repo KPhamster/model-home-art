@@ -20,6 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { quoteOptions, businessConfig } from "@/lib/config";
+import { DEFAULT_FRAME, FRAME_FOR_STYLE, FramePreview } from "@/components/quote/frame-preview";
+import type { QuoteFrameId } from "@/components/quote/quote-frames";
 import { toast } from "sonner";
 import {
   ArrowLeft, ArrowRight, Upload, X, Check, Camera,
@@ -106,8 +108,23 @@ export default function QuotePage() {
     preferredContact: "",
   });
 
+  // The frame drawn in the live preview. A "Frame Style" answer brings up that style's lead
+  // frame; the visitor can then try any other. Only a frame they picked themselves is passed
+  // on to the shop.
+  const [previewFrame, setPreviewFrame] = useState<QuoteFrameId>(DEFAULT_FRAME);
+  const [framePicked, setFramePicked] = useState(false);
+
   const updateField = <K extends keyof FormData>(field: K, value: FormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const chooseStyle = (value: string) => {
+    updateField("stylePreference", value);
+    const lead = FRAME_FOR_STYLE[value];
+    if (lead) {
+      setPreviewFrame(lead);
+      setFramePicked(false);
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -263,6 +280,7 @@ export default function QuotePage() {
         email: formData.email,
         phone: formData.phone,
         preferredContact: formData.preferredContact,
+        previewFrame: framePicked ? previewFrame : undefined,
       };
       submitFormData.append('formData', JSON.stringify(formFields));
       
@@ -353,10 +371,11 @@ export default function QuotePage() {
       lede="Tell us about your project and we'll provide options that fit your budget."
     />
     <div className="min-h-[calc(100vh-200px)] bg-sand py-10 lg:py-14">
-      <div className="container-wide max-w-3xl!">
+      {/* Phones: progress, preview, form in one column. Desktop: the preview stays beside the form. */}
+      <div className="container-wide max-w-3xl! lg:grid lg:max-w-6xl! lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-x-10">
 
         {/* Progress */}
-        <div className="mb-8">
+        <div className="mb-8 lg:col-start-1">
           <div className="flex justify-between items-center mb-2">
             {steps.map((step) => (
               <div
@@ -391,8 +410,30 @@ export default function QuotePage() {
           <Progress value={progress} className="h-2" />
         </div>
 
+        {/* Live preview. On a phone it stays in view through the Style step, where every answer
+            changes it, and steps aside for the last two steps, which do not. */}
+        <div
+          className={`z-20 mb-4 bg-sand lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mb-0 ${
+            currentStep === 3 ? "max-lg:sticky max-lg:top-16 max-lg:-mt-2 max-lg:py-2" : currentStep > 3 ? "max-lg:hidden" : ""
+          }`}
+        >
+          <FramePreview
+            photo={formData.images[0] ?? null}
+            width={formData.width}
+            height={formData.height}
+            matting={formData.matting}
+            protection={formData.protection}
+            frameId={previewFrame}
+            onFrameChange={(id) => {
+              setPreviewFrame(id);
+              setFramePicked(true);
+            }}
+            onAddPhoto={handleImageUpload}
+          />
+        </div>
+
         {/* Form Card */}
-        <Card>
+        <Card className="lg:col-start-1">
           <CardContent className="p-6 md:p-8">
             {/* Step 1: Category & Description */}
             {currentStep === 1 && (
@@ -603,7 +644,7 @@ export default function QuotePage() {
                   <Label>Frame Style *</Label>
                   <RadioGroup
                     value={formData.stylePreference}
-                    onValueChange={(value) => updateField("stylePreference", value)}
+                    onValueChange={chooseStyle}
                     className="grid grid-cols-2 sm:grid-cols-3 gap-3"
                   >
                     {quoteOptions.styles.map((style) => (
@@ -859,7 +900,7 @@ export default function QuotePage() {
         </Card>
 
         {/* Trust Indicators */}
-        <div className="mt-6 text-center text-sm text-muted-foreground">
+        <div className="mt-6 text-center text-sm text-muted-foreground lg:col-start-1">
           <p>
             <Check className="w-4 h-4 inline mr-1 text-primary" />
             We&apos;ll respond within {businessConfig.responseTime}
