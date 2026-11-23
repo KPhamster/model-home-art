@@ -3,8 +3,11 @@
 import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties } from "react";
 import { ImagePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { quoteFrames, quoteSampleArt, type QuoteFrame, type QuoteFrameId } from "./quote-frames";
+import { quoteFrames, quoteSampleArt, type QuoteFrame, type QuoteFrameId, type QuoteSample } from "./quote-frames";
 import styles from "./frame-preview.module.css";
+
+// How wide the sample picture is drawn at each screen width, for choosing which file to fetch.
+const SAMPLE_SIZES = "(min-width: 1536px) 36rem, (min-width: 1280px) 30rem, (min-width: 1024px) 21rem, 76vw";
 
 /** The frame shown before the visitor has chosen anything. */
 export const DEFAULT_FRAME: QuoteFrameId = "walnut";
@@ -38,13 +41,14 @@ function photoUrlFor(file: File) {
 }
 
 /** Sizes, in inches, of everything the preview draws. */
-function measure(width: string, height: string, photoRatio: number | null, matting: string, mouldingInches: number) {
+function measure(width: string, height: string, photoRatio: number | null, sample: QuoteSample, matting: string, mouldingInches: number) {
   const typedW = parseInches(width);
   const typedH = parseInches(height);
   const typed = typedW !== null && typedH !== null;
-  // What the visitor typed; failing that, the shape of their photo (or the sample) with a 20 in long side.
-  const ratio = clamp(typed ? typedW / typedH : (photoRatio ?? quoteSampleArt.widthInches / quoteSampleArt.heightInches), 0.25, 4);
-  const long = typed ? Math.max(typedW, typedH) : 20;
+  // What the visitor typed. Failing that, the shape of their photo with a 20 in long side;
+  // failing that, the sample picture at the size such a piece usually is.
+  const ratio = clamp(typed ? typedW / typedH : (photoRatio ?? sample.widthInches / sample.heightInches), 0.25, 4);
+  const long = typed ? Math.max(typedW, typedH) : photoRatio !== null ? 20 : Math.max(sample.widthInches, sample.heightInches);
   const w = ratio >= 1 ? long : long * ratio;
   const h = ratio >= 1 ? long / ratio : long;
   const short = Math.min(w, h);
@@ -68,6 +72,8 @@ const MAT_WORDS: Record<string, string> = {
 export const GLARE: Partial<Record<string, number>> = { standard: 1, upgraded: 0.3 };
 
 type FramePreviewProps = {
+  /** The picture to frame while the visitor has not added a photo; it follows the kind of piece they chose. */
+  sample?: QuoteSample;
   /** Every photo the visitor has added, and the one to draw (null before they add any). */
   photos: File[];
   photo: File | null;
@@ -96,6 +102,7 @@ type FramePreviewProps = {
  * "lg" breakpoint it drops its second caption line and small print, to leave a phone screen room for the form.
  */
 export function FramePreview({
+  sample = quoteSampleArt,
   photos,
   photo,
   onPhotoChange,
@@ -112,6 +119,9 @@ export function FramePreview({
   // The frame on screen. It follows frameId once that frame's photo has downloaded, so the
   // picture never sits bare while one loads.
   const [shownId, setShownId] = useState(frameId);
+  // The sample on screen, which likewise waits for the next one to download before changing,
+  // so the wall never shows the old picture squeezed into the new one's shape.
+  const [shownSample, setShownSample] = useState(sample);
   const [loaded, setLoaded] = useState<{ url: string; ratio: number } | null>(null);
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const preloaded = useRef(false);
@@ -130,6 +140,22 @@ export function FramePreview({
     };
   }, [frameId, shownId]);
 
+  useEffect(() => {
+    if (sample === shownSample) return;
+    let stale = false;
+    const image = new Image();
+    image.sizes = SAMPLE_SIZES;
+    image.srcset = sample.srcSet;
+    image.src = sample.src;
+    const show = () => {
+      if (!stale) setShownSample(sample);
+    };
+    image.decode().then(show, show);
+    return () => {
+      stale = true;
+    };
+  }, [sample, shownSample]);
+
   // The other frames are fetched the first time the visitor reaches for the picker.
   const preloadFrames = () => {
     if (preloaded.current) return;
@@ -143,7 +169,7 @@ export function FramePreview({
   const photoRatio = photoShown && loaded?.url === url ? loaded.ratio : null;
 
   const frame = frameById(shownId);
-  const size = measure(width, height, photoRatio, matting, frame.inches);
+  const size = measure(width, height, photoRatio, shownSample, matting, frame.inches);
   const [top, right, bottom, left] = frame.slice;
   const frameStyle = {
     "--total-w": size.totalW,
@@ -195,7 +221,7 @@ export function FramePreview({
                     />
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element -- pre-sized files, see scripts/build-quote-frames.mjs
-                    <img src={quoteSampleArt.src} srcSet={quoteSampleArt.srcSet} sizes="(min-width: 1024px) 20rem, 40vw" alt="" decoding="async" />
+                    <img key={shownSample.src} src={shownSample.src} srcSet={shownSample.srcSet} sizes={SAMPLE_SIZES} alt="" decoding="async" />
                   )}
                 </div>
               </div>
@@ -318,6 +344,8 @@ type FrameCornerProps = {
   glare?: number;
   /** The photo the preview is showing; the sample picture is drawn without one. */
   photo: File | null;
+  /** The sample picture the preview is showing. */
+  sample?: QuoteSample;
   /** How many inches of the framed picture the tile's width shows. Smaller is closer. */
   span?: number;
   className?: string;
@@ -328,14 +356,14 @@ type FrameCornerProps = {
  * same frame, mat, glass and picture as the preview, enlarged. Purely decorative; the tile's
  * label says what the option is. It needs a size from its class, an aspect ratio for one.
  */
-export function FrameCorner({ frameId, matting = "none", glare = 0, photo, span = 8, className }: FrameCornerProps) {
+export function FrameCorner({ frameId, matting = "none", glare = 0, photo, sample = quoteSampleArt, span = 8, className }: FrameCornerProps) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
   const url = photo ? photoUrlFor(photo) : null;
   const photoShown = url !== null && url !== failedUrl;
 
   const frame = frameById(frameId);
   // Always a 16 x 20 in picture, so every tile is drawn at the same scale.
-  const size = measure("16", "20", null, matting, frame.inches);
+  const size = measure("16", "20", null, sample, matting, frame.inches);
   const [top, right, bottom, left] = frame.slice;
   const frameStyle = {
     "--u": `calc(100cqw / ${span})`,
@@ -361,7 +389,7 @@ export function FrameCorner({ frameId, matting = "none", glare = 0, photo, span 
                 <img key={url} src={url} alt="" onError={() => setFailedUrl(url)} />
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element -- pre-sized files, see scripts/build-quote-frames.mjs
-                <img src={quoteSampleArt.src} srcSet={quoteSampleArt.srcSet} sizes="20rem" alt="" decoding="async" />
+                <img key={sample.src} src={sample.src} srcSet={sample.srcSet} sizes="20rem" alt="" decoding="async" />
               )}
             </span>
           </span>

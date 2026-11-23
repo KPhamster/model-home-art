@@ -1,15 +1,22 @@
 // Exports the artwork for the quote form's live frame preview.
 //
 // Source: head-on photos of seven of the shop's frames on white, each cropped to the frame's
-// outer edge, plus one hero still for the sample picture. They live outside git in
+// outer edge; one hero still for the default sample picture; and one unframed, straight-on
+// picture of each kind of piece the quote form lists. They live outside git in
 //   design/quote-frames/source/<name> frame.jpg
 //   design/hero-options/frame-swap-wall/orange/walnut.png
+//   design/quote-frames/samples/<name>.png
+// The pieces were redrawn from the site's own category photos (assets/*_image.*) with an
+// image model, which took each piece out of its frame and turned it to face the camera.
+// Three were drawn from a description instead, to leave out a real album cover, a real
+// player's name and an autograph: vinyl, jersey and sports.
 //
 // Output:
-//   public/quote/frames/<id>.webp          the whole frame; the page draws it as a CSS border-image
-//   public/quote/frames/<id>-corner.webp   a close-up of one corner, for the picker buttons
-//   public/quote/sample-art-<width>.webp   the picture shown until the visitor adds their own
-//   src/components/quote/quote-frames.ts   the list the preview reads
+//   public/quote/frames/<id>.webp            the whole frame; the page draws it as a CSS border-image
+//   public/quote/frames/<id>-corner.webp     a close-up of one corner, for the picker buttons
+//   public/quote/sample-art-<width>.webp     the picture shown until a kind of piece is chosen
+//   public/quote/samples/<name>-<width>.webp the picture shown for each kind of piece
+//   src/components/quote/quote-frames.ts     the list the preview reads
 //
 // How a photo of one frame fits every picture size: a border-image cuts the photo into four
 // corners and four sides. The corners keep their shape and the sides stretch. For that the
@@ -52,6 +59,35 @@ const FRAMES = [
 // The painted area inside the mat of the hero still, in its 2048 px square. It is 4:5.
 const SAMPLE_ART = { left: 609, top: 498, width: 830, height: 1040 };
 const SAMPLE_WIDTHS = [480, 830];
+
+// One sample per kind of piece. "category" is the quote form's value for it (its name in
+// lower case); "inches" is how wide such a piece typically is, which sets how heavy the frame
+// and mat look around it until the visitor types a size. "crop" trims the source, as
+// percentages of its width and height: left, top, right, bottom.
+const samplesDir = path.join(root, "design/quote-frames/samples");
+const CATEGORY_WIDTHS = [480, 960];
+const EDGE = [1.5, 1.5, 1.5, 1.5]; // generated pictures often carry a faint line at the very edge
+const CATEGORY_SAMPLES = [
+  { category: "photo", file: "photo", inches: 8 },
+  { category: "poster/print", file: "poster", inches: 24 },
+  { category: "fine art", file: "fine-art", inches: 18 },
+  { category: "diploma/certificate", file: "diploma", inches: 16 },
+  { category: "jersey", file: "jersey", inches: 24 },
+  { category: "mirror", file: "mirror", inches: 20 },
+  { category: "canvas", file: "canvas", inches: 18 },
+  { category: "needlework/textile", file: "needlework", inches: 12 },
+  { category: "shadowbox/memorabilia", file: "shadowbox", inches: 18 },
+  { category: "medals/awards", file: "medals", inches: 12 },
+  { category: "vinyl/album art", file: "vinyl", inches: 14 },
+  { category: "baby keepsake", file: "baby", inches: 12 },
+  { category: "wedding", file: "wedding", inches: 15 },
+  { category: "military", file: "military", inches: 18 },
+  // This one came back inside a wooden box frame; the crop keeps only the linen backing.
+  { category: "sports equipment", file: "sports", inches: 16, crop: [7, 6, 5.5, 6] },
+  { category: "document", file: "document", inches: 12 },
+  { category: "map/blueprint", file: "map", inches: 18 },
+  { category: "flag/banner", file: "flag", inches: 24 },
+];
 // Shown behind a corner close-up's opening, so the white frame stands out on a white page.
 const CORNER_BACKING = { r: 201, g: 192, b: 178 };
 
@@ -144,6 +180,34 @@ for (const w of SAMPLE_WIDTHS) {
   console.log(`sample-art-${w}  ${(buffer.length / 1024).toFixed(0)} KB`);
 }
 
+const categorySamples = {};
+await mkdir(path.join(publicDir, "samples"), { recursive: true });
+for (const sample of CATEGORY_SAMPLES) {
+  const source = path.join(samplesDir, `${sample.file}.png`);
+  const meta = await sharp(source).metadata();
+  const [l, t, r, b] = sample.crop ?? EDGE;
+  const box = {
+    left: Math.round((meta.width * l) / 100),
+    top: Math.round((meta.height * t) / 100),
+    width: Math.round((meta.width * (100 - l - r)) / 100),
+    height: Math.round((meta.height * (100 - t - b)) / 100),
+  };
+  let bytes = 0;
+  for (const w of CATEGORY_WIDTHS) {
+    const buffer = await sharp(source).extract(box).resize({ width: w, kernel: "lanczos3" }).webp({ quality: 80, effort: 6 }).toBuffer();
+    await writeFile(path.join(publicDir, "samples", `${sample.file}-${w}.webp`), buffer);
+    bytes += buffer.length;
+  }
+  totalBytes += bytes;
+  categorySamples[sample.category] = {
+    src: `/quote/samples/${sample.file}-${CATEGORY_WIDTHS.at(-1)}.webp`,
+    srcSet: CATEGORY_WIDTHS.map((w) => `/quote/samples/${sample.file}-${w}.webp ${w}w`).join(", "),
+    widthInches: sample.inches,
+    heightInches: Number(((sample.inches * box.height) / box.width).toFixed(1)),
+  };
+  console.log(`sample ${sample.file.padEnd(11)} ${box.width}x${box.height}  ${categorySamples[sample.category].widthInches} x ${categorySamples[sample.category].heightInches} in  ${(bytes / 1024).toFixed(0)} KB`);
+}
+
 const manifest = `// Generated by scripts/build-quote-frames.mjs. Do not edit by hand; run "npm run quote:frames".
 
 /**
@@ -159,13 +223,25 @@ ${entries.map((e) => `  ${JSON.stringify(e)},`).join("\n")}
 export type QuoteFrame = (typeof quoteFrames)[number];
 export type QuoteFrameId = QuoteFrame["id"];
 
-/** The picture shown until the visitor adds a photo of their own: 16 x 20 in, portrait. */
-export const quoteSampleArt = ${JSON.stringify({
+/** A sample picture the preview can frame, and the size in inches it is drawn at. */
+export type QuoteSample = { src: string; srcSet: string; widthInches: number; heightInches: number };
+
+/** The picture shown until a kind of piece is chosen: 16 x 20 in, portrait. */
+export const quoteSampleArt: QuoteSample = ${JSON.stringify({
   src: `/quote/sample-art-${SAMPLE_WIDTHS.at(-1)}.webp`,
   srcSet: SAMPLE_WIDTHS.map((w) => `/quote/sample-art-${w}.webp ${w}w`).join(", "),
   widthInches: 16,
   heightInches: 20,
-})} as const;
+})};
+
+/**
+ * The picture shown for each kind of piece on the quote form, keyed by the form's value for
+ * it, until the visitor adds a photo of their own. A kind that is not here ("other") keeps
+ * the default above.
+ */
+export const quoteCategorySamples: Partial<Record<string, QuoteSample>> = {
+${Object.entries(categorySamples).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)},`).join("\n")}
+};
 `;
 await writeFile(manifestPath, manifest);
 console.log(`total ${(totalBytes / 1024).toFixed(0)} KB, manifest written to ${path.relative(root, manifestPath)}`);
