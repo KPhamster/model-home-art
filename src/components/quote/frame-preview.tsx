@@ -74,10 +74,13 @@ export const GLARE: Partial<Record<string, number>> = { standard: 1, upgraded: 0
 type FramePreviewProps = {
   /** The picture to frame while the visitor has not added a photo; it follows the kind of piece they chose. */
   sample?: QuoteSample;
-  /** Every photo the visitor has added, and the one to draw (null before they add any). */
+  /** Every photo the visitor has added, and the one to draw: null draws the sample picture. */
   photos: File[];
   photo: File | null;
-  onPhotoChange: (photo: File) => void;
+  /** Called with the photo the visitor picks to see framed, or null for the sample picture. */
+  onPhotoChange: (photo: File | null) => void;
+  /** True once a category is chosen: the sample is then worth offering even with no photo to switch to. */
+  sampleOffered?: boolean;
   /** Width and height of the item in inches, as typed. */
   width: string;
   height: string;
@@ -106,6 +109,7 @@ export function FramePreview({
   photos,
   photo,
   onPhotoChange,
+  sampleOffered = false,
   width,
   height,
   matting,
@@ -183,6 +187,14 @@ export function FramePreview({
   } as CSSProperties;
 
   const picture = photoShown ? "Your photo" : "Sample picture";
+  // The pictures the visitor can switch between: the sample, then each of their photos. They
+  // are offered as soon as a category is chosen or a photo is added.
+  const pictureChoices = sampleOffered || photos.length > 0 ? 1 + photos.length : 0;
+  const pickerClass = (chosen: boolean) =>
+    cn(
+      "relative size-9 overflow-hidden rounded-md bg-sand text-xs font-medium text-stone-600 outline-offset-2 transition-shadow focus-visible:outline-2 focus-visible:outline-primary",
+      chosen ? "ring-2 ring-primary ring-offset-2" : "ring-1 ring-border hover:ring-primary/60",
+    );
   const matWords = MAT_WORDS[matting];
   const sizeWords = size.typed ? `${tidy(size.typedW!)} × ${tidy(size.typedH!)} in` : null;
   const article = /^[aeiou]/i.test(frame.label) ? "an" : "a";
@@ -197,13 +209,14 @@ export function FramePreview({
         <div
           role="img"
           aria-label={`Preview: ${summary}${sizeWords ? `, ${sizeWords}` : ""}.`}
-          // Phones: a square wall, or a shorter strip when pinned. Desktop: a tall wall, as tall
-          // as still lets the whole panel fit on screen under the site's header (18.5rem is the
-          // header, the gap under it, and everything in the panel but the wall).
+          // Phones: a square wall, or a shorter strip when pinned (shorter still when the row of
+          // picture choices sits under it). Desktop: a tall wall, as tall as still lets the whole
+          // panel fit on screen under the site's header (18.5rem is the header, the gap under it,
+          // and everything in the panel but the wall).
           className={cn(
             styles.stage,
             "w-full rounded-xl lg:aspect-[4/5] lg:max-h-[calc(100svh-18.5rem)]",
-            compactOnPhones ? "max-lg:h-52" : "max-lg:aspect-square max-lg:max-h-[26rem]",
+            compactOnPhones ? (pictureChoices > 1 ? "max-lg:h-44" : "max-lg:h-52") : "max-lg:aspect-square max-lg:max-h-[26rem]",
           )}
         >
           <div className={styles.frame} style={frameStyle}>
@@ -231,7 +244,7 @@ export function FramePreview({
           </div>
         </div>
 
-        {!photo && (
+        {photos.length === 0 && (
           <label className="absolute bottom-2 right-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-stone-800 shadow-sm backdrop-blur-sm transition-colors hover:bg-white focus-within:ring-2 focus-within:ring-primary">
             <ImagePlus className="size-3.5" aria-hidden="true" />
             Use your photo
@@ -276,11 +289,11 @@ export function FramePreview({
       </div>
 
       {/* Pinned on a phone, the caption goes (the wall takes its height) unless it has something
-          the visitor needs: the photo picker, or the note about a photo that cannot be drawn. */}
+          the visitor needs: pictures to switch between, or the note about a photo that cannot be drawn. */}
       <div
         className={cn(
           "mt-2 flex items-start justify-between gap-3 text-sm lg:mt-3",
-          compactOnPhones && photos.length < 2 && !(photo && !photoShown) && "max-lg:hidden",
+          compactOnPhones && pictureChoices < 2 && !(photo && !photoShown) && "max-lg:hidden",
         )}
       >
         <div className="min-w-0">
@@ -296,20 +309,29 @@ export function FramePreview({
           )}
         </div>
 
-        {/* With more than one photo, the visitor picks which one is framed. */}
-        {photos.length > 1 && (
-          <div role="group" aria-label="Photo to preview" className="flex shrink-0 gap-1.5">
+        {/* The visitor picks which picture is framed: the sample for their category, or one of their photos. */}
+        {pictureChoices > 0 && (
+          <div role="group" aria-label="Picture to preview" className="flex shrink-0 gap-1.5">
+            <button
+              type="button"
+              title="Sample picture"
+              aria-label="Show the sample picture"
+              aria-pressed={photo === null}
+              onClick={() => onPhotoChange(null)}
+              className={pickerClass(photo === null)}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- pre-sized files, see scripts/build-quote-frames.mjs */}
+              <img key={sample.src} src={sample.src} srcSet={sample.srcSet} sizes="2.25rem" alt="" className="size-full object-cover" />
+            </button>
             {photos.map((option, i) => (
               <button
                 key={photoUrlFor(option)}
                 type="button"
+                title={`Your photo ${i + 1}`}
                 aria-label={`Show photo ${i + 1} of ${photos.length}`}
                 aria-pressed={option === photo}
                 onClick={() => onPhotoChange(option)}
-                className={cn(
-                  "relative size-9 overflow-hidden rounded-md bg-sand text-xs font-medium text-stone-600 outline-offset-2 transition-shadow focus-visible:outline-2 focus-visible:outline-primary",
-                  option === photo ? "ring-2 ring-primary ring-offset-2" : "ring-1 ring-border hover:ring-primary/60",
-                )}
+                className={pickerClass(option === photo)}
               >
                 {/* The photo's number, seen only if the browser cannot draw the photo itself. */}
                 <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center">

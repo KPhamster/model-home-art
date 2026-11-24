@@ -217,10 +217,12 @@ export default function QuotePage() {
   const shownCategories =
     moreCategoriesOpen || moreCategoryChosen ? quoteOptions.categories : [...MAIN_CATEGORIES, OTHER_CATEGORY];
 
-  // The photo framed in the preview and in the Style step's tiles. It is the one the visitor
-  // picked or added last; if that one has been removed, their first.
-  const [chosenPhoto, setChosenPhoto] = useState<File | null>(null);
-  const shownPhoto = chosenPhoto && formData.images.includes(chosenPhoto) ? chosenPhoto : (formData.images[0] ?? null);
+  // The picture framed in the preview and in the Style step's tiles: the photo the visitor
+  // picked or added last (their first, if that one has been removed), or the sample picture
+  // when they picked that instead. A null shownPhoto means the sample.
+  const [previewPick, setPreviewPick] = useState<File | "sample" | null>(null);
+  const shownPhoto =
+    previewPick === "sample" ? null : previewPick && formData.images.includes(previewPick) ? previewPick : (formData.images[0] ?? null);
 
   const chooseStyle = (value: string) => {
     updateField("stylePreference", value);
@@ -260,7 +262,7 @@ export default function QuotePage() {
         images: newImages,
       }));
       // Show the photo that was just added.
-      setChosenPhoto(newImages[newImages.length - 1]);
+      setPreviewPick(newImages[newImages.length - 1]);
     } finally {
       setPreparingPhotos(false);
     }
@@ -540,7 +542,8 @@ export default function QuotePage() {
             sample={sample}
             photos={formData.images}
             photo={shownPhoto}
-            onPhotoChange={setChosenPhoto}
+            onPhotoChange={(photo) => setPreviewPick(photo ?? "sample")}
+            sampleOffered={category !== ""}
             width={formData.width}
             height={formData.height}
             matting={formData.matting}
@@ -607,7 +610,7 @@ export default function QuotePage() {
                       onClick={() => setMoreCategoriesOpen((open) => !open)}
                       className="mx-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-primary outline-offset-2 transition-colors hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary"
                     >
-                      {moreCategoriesOpen ? "Show fewer" : `More kinds (${MORE_CATEGORIES.length})`}
+                      {moreCategoriesOpen ? "Show fewer" : `More categories (${MORE_CATEGORIES.length})`}
                       <ChevronDown aria-hidden="true" className={`size-4 transition-transform ${moreCategoriesOpen ? "rotate-180" : ""}`} />
                     </button>
                   )}
