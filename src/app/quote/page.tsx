@@ -24,9 +24,10 @@ import { quoteOptions, quoteCategoryForFramingId, businessConfig } from "@/lib/c
 import { DEFAULT_FRAME, FRAME_FOR_STYLE, FrameCorner, FramePreview, GLARE } from "@/components/quote/frame-preview";
 import { quoteCategorySamples, quoteSampleArt, type QuoteFrameId } from "@/components/quote/quote-frames";
 import type { PhotoName } from "@/lib/photos";
+import { MAX_PHOTO_BYTES, MAX_PHOTO_MB, MAX_SEND_BYTES, shrinkPhotos } from "@/lib/shrink-photo";
 import { toast } from "sonner";
 import {
-  ArrowLeft, ArrowRight, Upload, X, Check, Camera,
+  ArrowLeft, ArrowRight, Upload, X, Check, Camera, LoaderCircle,
   Ruler, Palette, Clock, User, CheckCircle, CircleHelp,
   Shapes, Store, Truck, Package, Hammer, ChevronDown, type LucideIcon
 } from "lucide-react";
@@ -39,9 +40,9 @@ const steps = [
   { id: 5, name: "Contact", icon: User },
 ];
 
-// Maximum total upload size: 4MB (Vercel serverless function limit is 4.5MB)
-const MAX_UPLOAD_SIZE_MB = 4;
-const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+// How many photos the form takes. Each may be up to MAX_PHOTO_MB as picked; they are resized
+// in the browser to fit what the host accepts in one submission (see lib/shrink-photo).
+const MAX_PHOTOS = 3;
 
 // Helper to format file size
 const formatFileSize = (bytes: number): string => {
@@ -230,28 +231,39 @@ export default function QuotePage() {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // True while a picked photo is being resized, which can take a second for a large one.
+  const [preparingPhotos, setPreparingPhotos] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length + formData.images.length > 3) {
-      toast.error("Maximum 3 images allowed");
+    if (files.length === 0) return;
+    if (files.length + formData.images.length > MAX_PHOTOS) {
+      toast.error(`Maximum ${MAX_PHOTOS} images allowed`);
       return;
     }
-    
-    // Check total size including new files
-    const newImages = [...formData.images, ...files].slice(0, 3);
-    const totalSize = getTotalFileSize(newImages);
-    
-    if (totalSize > MAX_UPLOAD_SIZE_BYTES) {
-      toast.error(`Total upload size exceeds ${MAX_UPLOAD_SIZE_MB}MB limit. Please use smaller images.`);
+    if (files.some((file) => file.size > MAX_PHOTO_BYTES)) {
+      toast.error(`Each photo can be up to ${MAX_PHOTO_MB} MB. For anything larger, paste a link instead.`);
       return;
     }
-    
-    setFormData((prev) => ({
-      ...prev,
-      images: newImages,
-    }));
-    // Show the photo that was just added.
-    if (files.length > 0) setChosenPhoto(newImages[newImages.length - 1]);
+
+    setPreparingPhotos(true);
+    try {
+      const ready = await shrinkPhotos(files, MAX_PHOTOS);
+      const newImages = [...formData.images, ...ready].slice(0, MAX_PHOTOS);
+      // Only a file that could not be resized (a type this browser cannot open) can still be too big.
+      if (getTotalFileSize(newImages) > MAX_SEND_BYTES) {
+        toast.error("That photo is in a format we can't resize here, and it is too large to send as it is. Please use a JPEG or PNG, or paste a link instead.");
+        return;
+      }
+      setFormData((prev) => ({
+        ...prev,
+        images: newImages,
+      }));
+      // Show the photo that was just added.
+      setChosenPhoto(newImages[newImages.length - 1]);
+    } finally {
+      setPreparingPhotos(false);
+    }
   };
 
   const removeImage = (index: number) => {
@@ -401,7 +413,7 @@ export default function QuotePage() {
 
       // Handle payload too large error
       if (response.status === 413) {
-        throw new Error(`Your photos exceed the ${MAX_UPLOAD_SIZE_MB}MB limit. Please use smaller images or fewer photos.`);
+        throw new Error("Your photos are too large to send together. Please remove one, or paste a link to them instead.");
       }
 
       // Try to parse JSON response
@@ -625,18 +637,7 @@ export default function QuotePage() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Photos *</Label>
-                    {formData.images.length > 0 && (
-                      <span className={`text-xs font-medium ${
-                        getTotalFileSize(formData.images) > MAX_UPLOAD_SIZE_BYTES * 0.9
-                          ? "text-amber-600"
-                          : "text-muted-foreground"
-                      }`}>
-                        {formatFileSize(getTotalFileSize(formData.images))} / {MAX_UPLOAD_SIZE_MB} MB
-                      </span>
-                    )}
-                  </div>
+                  <Label>Photos *</Label>
                   <div className="grid grid-cols-3 gap-4">
                     {formData.images.map((file, index) => (
                       <div
@@ -660,21 +661,34 @@ export default function QuotePage() {
                         </button>
                       </div>
                     ))}
-                    {formData.images.length < 3 && (
-                      <label className="aspect-square border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
-                        <Upload className="w-6 h-6 text-muted-foreground mb-2" />
-                        <span className="text-xs text-muted-foreground">Add Photo</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
+                    {formData.images.length < MAX_PHOTOS &&
+                      (preparingPhotos ? (
+                        <div
+                          role="status"
+                          className="aspect-square border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center"
+                        >
+                          <LoaderCircle className="w-6 h-6 text-muted-foreground mb-2 animate-spin" aria-hidden="true" />
+                          <span className="text-xs text-muted-foreground">Preparing…</span>
+                        </div>
+                      ) : (
+                        <label className="aspect-square border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                          <Upload className="w-6 h-6 text-muted-foreground mb-2" />
+                          <span className="text-xs text-muted-foreground">Add Photo</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              handleImageUpload(e);
+                              // Cleared so the same photo can be picked again after being removed.
+                              e.target.value = "";
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+                      ))}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Upload 1-3 photos of your item. Maximum total size: {MAX_UPLOAD_SIZE_MB} MB.
+                    Upload 1-{MAX_PHOTOS} photos of your item, up to {MAX_PHOTO_MB} MB each. Large photos are resized before they are sent.
                   </p>
                 </div>
 
@@ -690,7 +704,7 @@ export default function QuotePage() {
 
                 {/* Image Link Alternative */}
                 <div className="space-y-2">
-                  <Label htmlFor="imageLink">Link to Photos (for larger files)</Label>
+                  <Label htmlFor="imageLink">Link to Photos (for full-size files)</Label>
                   <Input
                     id="imageLink"
                     type="url"
@@ -700,7 +714,7 @@ export default function QuotePage() {
                     disabled={formData.images.length > 0}
                   />
                   <p className="text-xs text-muted-foreground">
-                    For high-resolution photos or files larger than {MAX_UPLOAD_SIZE_MB} MB, paste a link from Google Drive, OneDrive, Dropbox, or iCloud. Make sure the link is set to "Anyone with the link can view."
+                    To send photos at their full size, or files larger than {MAX_PHOTO_MB} MB, paste a link from Google Drive, OneDrive, Dropbox, or iCloud. Make sure the link is set to &ldquo;Anyone with the link can view.&rdquo;
                   </p>
                 </div>
 
