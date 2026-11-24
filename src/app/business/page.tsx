@@ -12,12 +12,13 @@ import { businessTypes } from "@/lib/config";
 import { toast } from "sonner";
 import {
   Building2, Users, Palette, Wrench, Truck,
-  ArrowRight, Upload, X
+  ArrowRight, Upload, X, LoaderCircle
 } from "lucide-react";
+import { MAX_PHOTO_BYTES, MAX_PHOTO_MB, MAX_SEND_BYTES, shrinkPhotos } from "@/lib/shrink-photo";
 
-// Maximum total upload size: 4MB (Vercel serverless function limit is 4.5MB)
-const MAX_UPLOAD_SIZE_MB = 4;
-const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+// How many photos the form takes. Each may be up to MAX_PHOTO_MB as picked; they are resized
+// in the browser to fit what the host accepts in one submission (see lib/shrink-photo).
+const MAX_PHOTOS = 5;
 
 // Helper to format file size
 const formatFileSize = (bytes: number): string => {
@@ -72,24 +73,36 @@ export default function BusinessPage() {
   const [images, setImages] = useState<File[]>([]);
   const [imageLink, setImageLink] = useState("");
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // True while picked photos are being resized, which can take a second for large ones.
+  const [preparingPhotos, setPreparingPhotos] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length + images.length > 5) {
-      toast.error("Maximum 5 images allowed");
-      return;
-    }
-    
-    const newImages = [...images, ...files].slice(0, 5);
-    const totalSize = getTotalFileSize(newImages);
-    
-    if (totalSize > MAX_UPLOAD_SIZE_BYTES) {
-      toast.error(`Total upload size exceeds ${MAX_UPLOAD_SIZE_MB}MB limit. Please use smaller images or provide a link.`);
-      return;
-    }
-    
-    setImages(newImages);
     // Clear the input so the same file can be selected again
     e.target.value = "";
+    if (files.length === 0) return;
+    if (files.length + images.length > MAX_PHOTOS) {
+      toast.error(`Maximum ${MAX_PHOTOS} images allowed`);
+      return;
+    }
+    if (files.some((file) => file.size > MAX_PHOTO_BYTES)) {
+      toast.error(`Each photo can be up to ${MAX_PHOTO_MB} MB. For anything larger, provide a link instead.`);
+      return;
+    }
+
+    setPreparingPhotos(true);
+    try {
+      const ready = await shrinkPhotos(files, MAX_PHOTOS);
+      const newImages = [...images, ...ready].slice(0, MAX_PHOTOS);
+      // Only a file that could not be resized (a type this browser cannot open) can still be too big.
+      if (getTotalFileSize(newImages) > MAX_SEND_BYTES) {
+        toast.error("One of those photos is in a format we can't resize here, and it is too large to send as it is. Please use JPEG or PNG files, or provide a link instead.");
+        return;
+      }
+      setImages(newImages);
+    } finally {
+      setPreparingPhotos(false);
+    }
   };
 
   const removeImage = (index: number) => {
@@ -132,7 +145,7 @@ export default function BusinessPage() {
       });
 
       if (response.status === 413) {
-        throw new Error(`Your photos exceed the ${MAX_UPLOAD_SIZE_MB}MB limit. Please use smaller images or provide a link instead.`);
+        throw new Error("Your photos are too large to send together. Please remove one, or provide a link instead.");
       }
 
       const result = await response.json();
@@ -292,18 +305,7 @@ export default function BusinessPage() {
 
                   {/* Photo Upload */}
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label>Photos (optional)</Label>
-                      {images.length > 0 && (
-                        <span className={`text-xs font-medium ${
-                          getTotalFileSize(images) > MAX_UPLOAD_SIZE_BYTES * 0.9
-                            ? "text-amber-600"
-                            : "text-muted-foreground"
-                        }`}>
-                          {formatFileSize(getTotalFileSize(images))} / {MAX_UPLOAD_SIZE_MB} MB
-                        </span>
-                      )}
-                    </div>
+                    <Label>Photos (optional)</Label>
                     
                     {/* Image previews */}
                     {images.length > 0 && (
@@ -333,12 +335,19 @@ export default function BusinessPage() {
                       </div>
                     )}
                     
-                    {images.length < 5 && (
+                    {images.length < MAX_PHOTOS && preparingPhotos && (
+                      <div role="status" className="border-2 border-dashed border-border rounded-lg p-6 text-center">
+                        <LoaderCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground animate-spin" aria-hidden="true" />
+                        <p className="text-sm text-muted-foreground">Preparing your photos…</p>
+                      </div>
+                    )}
+                    {images.length < MAX_PHOTOS && !preparingPhotos && (
                       <label className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors block">
                         <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                         <p className="text-sm text-muted-foreground">
-                          Click to upload photos (max {MAX_UPLOAD_SIZE_MB} MB total)
+                          Click to upload up to {MAX_PHOTOS} photos ({MAX_PHOTO_MB} MB each at most)
                         </p>
+                        <p className="mt-1 text-xs text-muted-foreground">Large photos are resized before they are sent.</p>
                         <input
                           type="file"
                           className="hidden"
@@ -372,7 +381,7 @@ export default function BusinessPage() {
                         disabled={images.length > 0}
                       />
                       <p className="text-xs text-muted-foreground">
-                        For high-resolution photos or files larger than {MAX_UPLOAD_SIZE_MB} MB, paste a link from Google Drive, OneDrive, Dropbox, or iCloud.
+                        To send photos at their full size, or files larger than {MAX_PHOTO_MB} MB, paste a link from Google Drive, OneDrive, Dropbox, or iCloud.
                       </p>
                     </div>
                   </div>
